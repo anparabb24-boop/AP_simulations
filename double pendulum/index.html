@@ -3,81 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Double Pendulum Simulation</title>
+  <title>Physics Simulations Workspace</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <main class="app">
     <header class="header">
-      <div>
-        <p class="eyebrow">PHYSICS SIMULATION</p>
-        <h1>Double Pendulum</h1>
-        <p class="subtitle">
-          A browser-based interactive double-pendulum simulation.
-        </p>
+      <div class="header-top">
+        <p class="eyebrow">PHYSICS SIMULATION WORKSPACE</p>
+        <nav class="sim-nav">
+          <button id="navPendulum" class="nav-btn active">Double Pendulum</button>
+          <button id="navEField" class="nav-btn">Delayed E-Field</button>
+        </nav>
       </div>
+      <h1 id="simTitle">Double Pendulum</h1>
+      <p id="simSubtitle" class="subtitle">
+        A browser-based interactive double-pendulum simulation.
+      </p>
     </header>
 
-    <section class="simulation-card">
-      <div class="canvas-wrap">
-        <canvas id="simulationCanvas"></canvas>
-      </div>
-
-      <div class="controls">
-        <button id="playButton" class="button primary">▶ Play</button>
-        <button id="pauseButton" class="button">⏸ Pause</button>
-        <button id="resetButton" class="button">↻ Reset</button>
-
-        <div class="time">
-          <span>Simulation time</span>
-          <strong id="timeDisplay">time = 0.0s</strong>
+    <!-- Double Pendulum View -->
+    <div id="viewPendulum" class="sim-view">
+      <section class="simulation-card">
+        <div class="canvas-wrap">
+          <canvas id="simulationCanvas"></canvas>
         </div>
-      </div>
-    </section>
-
-    <section class="info-card">
-      <h2>Simulation parameters</h2>
-
-      <div class="parameters">
-        <div class="parameter">
-          <label for="inputL1">Rod 1 length (m)</label>
-          <input type="number" id="inputL1" value="1.0" step="0.1" min="0.1" />
+        <div class="controls">
+          <button id="playButton" class="button primary">▶ Play</button>
+          <button id="pauseButton" class="button">⏸ Pause</button>
+          <button id="resetButton" class="button">↻ Reset</button>
+          <div class="time">
+            <span>Simulation time</span>
+            <strong id="timeDisplay">time = 0.0s</strong>
+          </div>
         </div>
+      </section>
 
-        <div class="parameter">
-          <label for="inputL2">Rod 2 length (m)</label>
-          <input type="number" id="inputL2" value="1.0" step="0.1" min="0.1" />
+      <section class="info-card">
+        <h2>Simulation parameters</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="inputL1">Rod 1 length (m)</label>
+            <input type="number" id="inputL1" value="1.0" step="0.1" min="0.1" />
+          </div>
+          <div class="parameter">
+            <label for="inputL2">Rod 2 length (m)</label>
+            <input type="number" id="inputL2" value="1.0" step="0.1" min="0.1" />
+          </div>
+          <div class="parameter">
+            <label for="inputTh1">Angle 1 (°)</label>
+            <input type="number" id="inputTh1" value="90" step="1" />
+          </div>
+          <div class="parameter">
+            <label for="inputTh2">Angle 2 (°)</label>
+            <input type="number" id="inputTh2" value="90" step="1" />
+          </div>
+          <div class="parameter">
+            <label for="inputM1">Mass 1 (kg)</label>
+            <input type="number" id="inputM1" value="5.0" step="0.5" min="0.1" />
+          </div>
+          <div class="parameter">
+            <label for="inputM2">Mass 2 (kg)</label>
+            <input type="number" id="inputM2" value="5.0" step="0.5" min="0.1" />
+          </div>
+          <div class="parameter">
+            <label for="inputTStop">Max Sim Time (s)</label>
+            <input type="number" id="inputTStop" value="10" step="1" min="1" />
+          </div>
         </div>
+      </section>
+    </div>
 
-        <div class="parameter">
-          <label for="inputTh1">Angle 1 (°)</label>
-          <input type="number" id="inputTh1" value="90" step="1" />
+    <!-- Electric Field View -->
+    <div id="viewEField" class="sim-view" style="display: none;">
+      <section class="simulation-card">
+        <div class="canvas-wrap">
+          <canvas id="efieldCanvas"></canvas>
         </div>
+        <div class="controls">
+          <button id="efPlayButton" class="button primary">▶ Play</button>
+          <button id="efPauseButton" class="button">⏸ Pause</button>
+          <button id="efResetButton" class="button">↻ Reset</button>
+          <div class="time">
+            <span>Time</span>
+            <strong id="efTimeDisplay">t = 0.0s</strong>
+          </div>
+        </div>
+      </section>
 
-        <div class="parameter">
-          <label for="inputTh2">Angle 2 (°)</label>
-          <input type="number" id="inputTh2" value="90" step="1" />
+      <section class="info-card">
+        <h2>Electrodynamic Parameters</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="inputCharge">Charge q (μC)</label>
+            <input type="number" id="inputCharge" value="1.0" step="0.1" />
+          </div>
+          <div class="parameter">
+            <label for="inputVel">Velocity v/c</label>
+            <input type="number" id="inputVel" value="0.5" step="0.05" min="0" max="0.95" />
+          </div>
+          <div class="parameter">
+            <label for="inputSpeedC">Propagation Speed c (px/s)</label>
+            <input type="number" id="inputSpeedC" value="150" step="10" min="50" />
+          </div>
         </div>
-
-        <div class="parameter">
-          <label for="inputM1">Mass 1 (kg)</label>
-          <input type="number" id="inputM1" value="5.0" step="0.5" min="0.1" />
-        </div>
-
-        <div class="parameter">
-          <label for="inputM2">Mass 2 (kg)</label>
-          <input type="number" id="inputM2" value="5.0" step="0.5" min="0.1" />
-        </div>
-
-        <div class="parameter">
-          <label for="inputTStop">Max Sim Time (s)</label>
-          <input type="number" id="inputTStop" value="10" step="1" min="1" />
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <script src="double_pendulum.js"></script>
+  <script src="electric_field.js"></script>
+  <script src="app_router.js"></script>
 </body>
 </html>
