@@ -16,7 +16,7 @@ let efRunning = false;
 let efAnimFrame = null;
 
 // Hardcoded Simulation Constants
-const x_l = 30, y_l = 30, z_l = 30;
+const x_l = 50, y_l = 50, z_l = 50;
 const k = 9000000000;
 const c = 0.4;
 const axisColor = 0x337BA4;
@@ -24,8 +24,8 @@ const fieldColor = 0x337BA4;
 const chargeColor = 0xC32828;
 
 // Hardcoded Visual Sizing Parameters
-const axisRadius = 0.35;    // Thickness of solid cylinder axes
-const arrowLength = 4.0;    // Overall vector arrow length
+const axisRadius = 0.25;    // Thickness of solid cylinder axes
+const arrowLength = 5.0;    // Overall vector arrow length
 const headLength = 1.5;     // Arrowhead length
 const headWidth = 1.0;      // Arrowhead width/thickness
 
