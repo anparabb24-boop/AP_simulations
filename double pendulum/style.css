@@ -204,3 +204,26 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+.parameter label {
+  display: block;
+  margin-bottom: 6px;
+  color: #9ba3af;
+  font-size: 0.82rem;
+}
+
+.parameter input {
+  width: 100%;
+  background: #131b27;
+  border: 1px solid #2a3441;
+  border-radius: 6px;
+  color: #ffffff;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.parameter input:focus {
+  border-color: #0066ff;
+}

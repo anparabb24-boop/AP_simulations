@@ -38,36 +38,37 @@
 
     <section class="info-card">
       <h2>Simulation parameters</h2>
-
       <div class="parameters">
+
         <div class="parameter">
-          <span>Gravity</span>
-          <strong>9.8 m/s²</strong>
+          <label for="inputGravity">Gravity (m/s²)</label>
+          <input type="number" id="inputGravity" value="9.8" step="0.1" min="0" />
+        </div>
+        
+        <div class="parameter">
+          <label for="inputL1">Rod 1 length (m)</label>
+          <input type="number" id="inputL1" value="1.0" step="0.1" min="0.1" />
+        </div>
+        
+        <div class="parameter">
+          <label for="inputL2">Rod 2 length (m)</label>
+          <input type="number" id="inputL2" value="1.0" step="0.1" min="0.1" />
         </div>
 
         <div class="parameter">
-          <span>Rod 1 length</span>
-          <strong>1.0 m</strong>
+          <label for="inputM1">Mass 1 (kg)</label>
+          <input type="number" id="inputM1" value="5.0" step="0.5" min="0.1" />
         </div>
 
         <div class="parameter">
-          <span>Rod 2 length</span>
-          <strong>1.0 m</strong>
+          <label for="inputM2">Mass 2 (kg)</label>
+          <input type="number" id="inputM2" value="5.0" step="0.5" min="0.1" />
         </div>
 
         <div class="parameter">
-          <span>Mass 1</span>
-          <strong>5.0 kg</strong>
-        </div>
+          <label for="inputTh1">Initial Angle 1 (°)</label>
+          <input type="number" id="inputTh1" value="90" step="1" />
 
-        <div class="parameter">
-          <span>Mass 2</span>
-          <strong>5.0 kg</strong>
-        </div>
-
-        <div class="parameter">
-          <span>Time step</span>
-          <strong>0.01 s</strong>
         </div>
       </div>
     </section>

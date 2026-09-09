@@ -1,139 +1,115 @@
-// HTML Canvas & UI Elements
-const canvas = document.getElementById('simulationCanvas');
-const ctx = canvas.getContext('2d');
+// HTML Input Elements
+const inputG = document.getElementById('inputGravity');
+const inputL1 = document.getElementById('inputL1');
+const inputL2 = document.getElementById('inputL2');
+const inputM1 = document.getElementById('inputM1');
+const inputM2 = document.getElementById('inputM2');
+const inputTh1 = document.getElementById('inputTh1');
 
-const playButton = document.getElementById('playButton');
-const pauseButton = document.getElementById('pauseButton');
-const resetButton = document.getElementById('resetButton');
-const timeDisplay = document.getElementById('timeDisplay');
+// Dynamic Physics Variables
+let G = parseFloat(inputG.value);
+let L1 = parseFloat(inputL1.value);
+let L2 = parseFloat(inputL2.value);
+let M1 = parseFloat(inputM1.value);
+let M2 = parseFloat(inputM2.value);
+let dt = 0.01;
 
-// ---------------------------------------------------------------------
-// Constants & Configuration (matching double_pendulum.py)
-// ---------------------------------------------------------------------
-const G = 9.8;          // acceleration due to gravity, in m/s^2[cite: 4]
-const L1 = 1.0;         // length of pendulum 1 in m[cite: 4]
-const L2 = 1.0;         // length of pendulum 2 in m[cite: 4]
-const L = L1 + L2;      // maximal length of combined pendulum[cite: 4]
-const M1 = 5.0;         // mass of pendulum 1 in kg[cite: 4]
-const M2 = 5.0;         // mass of pendulum 2 in kg[cite: 4]
-const tStop = 10;       // how many seconds to simulate[cite: 4]
-const historyLen = 50;  // how many trajectory points to display in the trace[cite: 4]
-const dt = 0.01;        // time step[cite: 4]
+// Simulation State
+let state = [(parseFloat(inputTh1.value) * Math.PI) / 180, 0, (90 * Math.PI) / 180, 0];
+let traceHistory = [];
+let simTime = 0.0;
+let isRunning = false;
+let animationFrameId = null;
 
-// Initial state (angles converted from 90° degrees to radians)[cite: 4]
-const th1 = (90.0 * Math.PI) / 180.0;
-const w1 = 0.0;
-const th2 = (90.0 * Math.PI) / 180.0;
-const w2 = 0.0;
+function readInputs() {
+  G = parseFloat(inputG.value) || 9.8;
+  L1 = parseFloat(inputL1.value) || 1.0;
+  L2 = parseFloat(inputL2.value) || 1.0;
+  M1 = parseFloat(inputM1.value) || 5.0;
+  M2 = parseFloat(inputM2.value) || 5.0;
+}
 
-// ---------------------------------------------------------------------
-// Derivatives (exact Python derivs function)
-// ---------------------------------------------------------------------
-function derivs(state) {
+function resetSimulation() {
+  isRunning = false;
+  cancelAnimationFrame(animationFrameId);
+  readInputs();
+  
+  const initialTh1 = (parseFloat(inputTh1.value) || 90) * (Math.PI / 180);
+  state = [initialTh1, 0, Math.PI / 2, 0];
+  traceHistory = [];
+  simTime = 0.0;
+  
+  renderFrame();
+}
+
+function derivs(s) {
   const dydx = [0, 0, 0, 0];
+  dydx[0] = s[1];
 
-  dydx[0] = state[1];
-
-  const delta = state[2] - state[0]; // state[2] = theta2, state[0] = theta1[cite: 4]
+  const delta = s[2] - s[0];
   const den1 = (M1 + M2) * L1 - M2 * L1 * Math.cos(delta) * Math.cos(delta);
 
   dydx[1] =
-    (M2 * L1 * state[1] * state[1] * Math.sin(delta) * Math.cos(delta) +
-      M2 * G * Math.sin(state[2]) * Math.cos(delta) +
-      M2 * L2 * state[3] * state[3] * Math.sin(delta) -
-      (M1 + M2) * G * Math.sin(state[0])) /
-    den1;
+    (M2 * L1 * s[1] * s[1] * Math.sin(delta) * Math.cos(delta) +
+      M2 * G * Math.sin(s[2]) * Math.cos(delta) +
+      M2 * L2 * s[3] * s[3] * Math.sin(delta) -
+      (M1 + M2) * G * Math.sin(s[0])) / den1;
 
-  dydx[2] = state[3];
-
+  dydx[2] = s[3];
   const den2 = (L2 / L1) * den1;
 
   dydx[3] =
-    (-M2 * L2 * state[3] * state[3] * Math.sin(delta) * Math.cos(delta) +
-      (M1 + M2) * G * Math.sin(state[0]) * Math.cos(delta) -
-      (M1 + M2) * L1 * state[1] * state[1] * Math.sin(delta) -
-      (M1 + M2) * G * Math.sin(state[2])) /
-    den2;
+    (-M2 * L2 * s[3] * s[3] * Math.sin(delta) * Math.cos(delta) +
+      (M1 + M2) * G * Math.sin(s[0]) * Math.cos(delta) -
+      (M1 + M2) * L1 * s[1] * s[1] * Math.sin(delta) -
+      (M1 + M2) * G * Math.sin(s[2])) / den2;
 
   return dydx;
 }
 
-// ---------------------------------------------------------------------
-// Euler's Integration Pre-computation
-// ---------------------------------------------------------------------
-const numSteps = Math.floor(tStop / dt);
-const t = new Float64Array(numSteps);
-const x1 = new Float64Array(numSteps);
-const y1 = new Float64Array(numSteps);
-const x2 = new Float64Array(numSteps);
-const y2 = new Float64Array(numSteps);
-
-let currentState = [th1, w1, th2, w2];
-
-for (let i = 0; i < numSteps; i++) {
-  t[i] = i * dt;
-
-  const theta1 = currentState[0];
-  const theta2 = currentState[2];
-
-  // Cartesian coordinates (matching y-axis orientation in Python)
-  x1[i] = L1 * Math.sin(theta1);
-  y1[i] = -L1 * Math.cos(theta1);
-
-  x2[i] = L2 * Math.sin(theta2) + x1[i];
-  y2[i] = -L2 * Math.cos(theta2) + y1[i];
-
-  // Euler Integration step: y[i] = y[i-1] + derivs(y[i-1]) * dt
-  const dState = derivs(currentState);
+function stepPhysics() {
+  const dState = derivs(state);
   for (let j = 0; j < 4; j++) {
-    currentState[j] += dState[j] * dt;
+    state[j] += dState[j] * dt;
   }
+  simTime += dt;
 }
 
-// ---------------------------------------------------------------------
-// Render & Animation Control
-// ---------------------------------------------------------------------
-let currentIndex = 0;
-let isRunning = false;
-let animationFrameId = null;
-
-function renderFrame(i) {
+function renderFrame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const originX = canvas.width / 2;
   const originY = canvas.height / 2;
-  
-  // Scale meter dimensions to canvas pixels based on maximal pendulum length
-  const scale = Math.min(canvas.width, canvas.height) / (2 * L + 1.0);
+  const totalL = L1 + L2;
+  const scale = Math.min(canvas.width, canvas.height) / (2 * totalL + 1.0);
 
-  // Map physical coordinates (X, Y) to canvas screen space (inverted canvas Y)
-  const px1 = originX + x1[i] * scale;
-  const py1 = originY - y1[i] * scale;
+  const x1 = L1 * Math.sin(state[0]);
+  const y1 = -L1 * Math.cos(state[0]);
+  const x2 = L2 * Math.sin(state[2]) + x1;
+  const y2 = -L2 * Math.cos(state[2]) + y1;
 
-  const px2 = originX + x2[i] * scale;
-  const py2 = originY - y2[i] * scale;
+  const px1 = originX + x1 * scale;
+  const py1 = originY - y1 * scale;
+  const px2 = originX + x2 * scale;
+  const py2 = originY - y2 * scale;
 
-  // 1. Draw Trace History (trace disappears behind the pendulum)[cite: 4]
-  const start = Math.max(0, i - historyLen);
-  if (i > start) {
+  // Track tip trajectory
+  traceHistory.push({ x: px2, y: py2 });
+  if (traceHistory.length > 50) traceHistory.shift();
+
+  // Draw trace
+  if (traceHistory.length > 1) {
     ctx.beginPath();
     ctx.strokeStyle = '#ff7f0e';
     ctx.lineWidth = 1.5;
-
-    for (let k = start; k < i; k++) {
-      const tx = originX + x2[k] * scale;
-      const ty = originY - y2[k] * scale;
-
-      if (k === start) {
-        ctx.moveTo(tx, ty);
-      } else {
-        ctx.lineTo(tx, ty);
-      }
+    ctx.moveTo(traceHistory[0].x, traceHistory[0].y);
+    for (let i = 1; i < traceHistory.length; i++) {
+      ctx.lineTo(traceHistory[i].x, traceHistory[i].y);
     }
     ctx.stroke();
   }
 
-  // 2. Draw Pendulum Rods ('o-')
+  // Draw rods
   ctx.beginPath();
   ctx.moveTo(originX, originY);
   ctx.lineTo(px1, py1);
@@ -142,7 +118,7 @@ function renderFrame(i) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 3. Draw Joints / Bob Dots ('o')
+  // Draw joints
   const drawCircle = (x, y, r, color) => {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
@@ -150,61 +126,25 @@ function renderFrame(i) {
     ctx.fill();
   };
 
-  drawCircle(originX, originY, 4, '#6a6a6a'); // Pivot
-  drawCircle(px1, py1, 6, '#0066ff');       // Mass 1
-  drawCircle(px2, py2, 6, '#0066ff');       // Mass 2
+  drawCircle(originX, originY, 4, '#6a6a6a');
+  drawCircle(px1, py1, 6, '#0066ff');
+  drawCircle(px2, py2, 6, '#0066ff');
 
-  // Update UI Time Text
-  timeDisplay.textContent = `time = ${(i * dt).toFixed(1)}s`;
+  timeDisplay.textContent = `time = ${simTime.toFixed(1)}s`;
 }
 
 function animate() {
   if (!isRunning) return;
 
-  renderFrame(currentIndex);
-  currentIndex++;
+  stepPhysics();
+  renderFrame();
 
-  if (currentIndex >= numSteps) {
-    isRunning = false;
-    return;
-  }
-
-  // Loop around ~100 FPS (dt = 0.01s = 10ms per frame)
-  animationFrameId = setTimeout(() => {
-    requestAnimationFrame(animate);
-  }, dt * 1000);
+  animationFrameId = requestAnimationFrame(animate);
 }
 
-// ---------------------------------------------------------------------
-// Event Listeners & Canvas Resizing
-// ---------------------------------------------------------------------
-function resizeCanvas() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
-  renderFrame(currentIndex);
-}
-
-playButton.addEventListener('click', () => {
-  if (!isRunning && currentIndex < numSteps) {
-    isRunning = true;
-    animate();
-  }
+// Add event listeners for inputs
+[inputG, inputL1, inputL2, inputM1, inputM2, inputTh1].forEach((input) => {
+  input.addEventListener('change', resetSimulation);
 });
 
-pauseButton.addEventListener('click', () => {
-  isRunning = false;
-  clearTimeout(animationFrameId);
-});
-
-resetButton.addEventListener('click', () => {
-  isRunning = false;
-  clearTimeout(animationFrameId);
-  currentIndex = 0;
-  renderFrame(0);
-});
-
-window.addEventListener('resize', resizeCanvas);
-
-// Initialize canvas
-resizeCanvas();
+resetButton.addEventListener('click', resetSimulation);
