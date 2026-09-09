@@ -15,7 +15,7 @@ let frame = 0;
 let efRunning = false;
 let efAnimFrame = null;
 
-// Constants
+// Hardcoded Simulation Constants
 const x_l = 30, y_l = 30, z_l = 30;
 const k = 9000000000;
 const c = 0.4;
@@ -23,9 +23,15 @@ const axisColor = 0x337BA4;
 const fieldColor = 0x337BA4;
 const chargeColor = 0xC32828;
 
+// Hardcoded Visual Sizing Parameters
+const axisRadius = 0.35;    // Thickness of solid cylinder axes
+const arrowLength = 4.0;    // Overall vector arrow length
+const headLength = 1.5;     // Arrowhead length
+const headWidth = 1.0;      // Arrowhead width/thickness
+
 // Dynamic Motion Parsers
 function getPositionAtTime(t) {
-  let qVal = parseFloat(inputQ.value) || 2;
+  let qVal = parseFloat(inputQ ? inputQ.value : 2) || 2;
   let x = 0, y = 0, z = 0;
 
   try {
@@ -54,9 +60,9 @@ scene.background = new THREE.Color(0x121111);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 
-// ORIENTATION FIX: Set Z as UP vector
+// Set Z as UP vector so Z-axis points straight up
 camera.up.set(0, 0, 1);
-camera.position.set(40, 40, 40);
+camera.position.set(50, 50, 30);
 
 const existingCanvas = document.getElementById('efieldCanvas');
 if (existingCanvas) existingCanvas.remove();
@@ -68,28 +74,42 @@ efContainer.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// 2. Axes Setup
-function createAxis(p1, p2, color) {
-  const geom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
-  const mat = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
-  return new THREE.Line(geom, mat);
+// Lighting for 3D Mesh geometries
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(20, 20, 40);
+scene.add(dirLight);
+
+// 2. Solid Thick Axes Helper (Cylinders)
+function createAxis(p1, p2, color, radius) {
+  const direction = new THREE.Vector3().subVectors(p2, p1);
+  const length = direction.length();
+  const geometry = new THREE.CylinderGeometry(radius, radius, length, 16);
+  const material = new THREE.MeshPhongMaterial({ color: color, flatShading: true });
+  const cylinder = new THREE.Mesh(geometry, material);
+
+  const midpoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+  cylinder.position.copy(midpoint);
+  cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+
+  return cylinder;
 }
 
-scene.add(createAxis(new THREE.Vector3(-x_l, 0, 0), new THREE.Vector3(x_l, 0, 0), axisColor));
-scene.add(createAxis(new THREE.Vector3(0, -y_l, 0), new THREE.Vector3(0, y_l, 0), axisColor));
-scene.add(createAxis(new THREE.Vector3(0, 0, -z_l), new THREE.Vector3(0, 0, z_l), axisColor));
+scene.add(createAxis(new THREE.Vector3(-x_l, 0, 0), new THREE.Vector3(x_l, 0, 0), axisColor, axisRadius));
+scene.add(createAxis(new THREE.Vector3(0, -y_l, 0), new THREE.Vector3(0, y_l, 0), axisColor, axisRadius));
+scene.add(createAxis(new THREE.Vector3(0, 0, -z_l), new THREE.Vector3(0, 0, z_l), axisColor, axisRadius));
 
-// 3. Point Charge
-const chargeGeo = new THREE.SphereGeometry(1.2, 32, 32);
+// 3. Point Charge Sphere
+const chargeGeo = new THREE.SphereGeometry(1.5, 32, 32);
 const chargeMat = new THREE.MeshBasicMaterial({ color: chargeColor });
 const chargeMesh = new THREE.Mesh(chargeGeo, chargeMat);
 scene.add(chargeMesh);
 
-// 4. Dynamic Grid Generator
+// 4. Dynamic Vector Grid Construction
 let arrows = [];
 
 function rebuildVectorGrid() {
-  // Remove previous vector arrows
   arrows.forEach(({ arrow }) => scene.remove(arrow));
   arrows = [];
 
@@ -113,9 +133,11 @@ function rebuildVectorGrid() {
 
       const dir = new THREE.Vector3(0, 0, 1);
       const origin = new THREE.Vector3(x, y, z);
-      const arrow = new THREE.ArrowHelper(dir, origin, 3, fieldColor, 0.8, 0.5);
-      arrow.line.material.transparent = true;
-      arrow.line.material.opacity = 0.5;
+      
+      // Arrow initialized with thick hardcoded proportions
+      const arrow = new THREE.ArrowHelper(dir, origin, arrowLength, fieldColor, headLength, headWidth);
+      arrow.line.material.transparent = false;
+      arrow.line.material.opacity = 1.0;
 
       scene.add(arrow);
       arrows.push({ arrow, origin });
@@ -156,20 +178,12 @@ function updateFrame(currentFrame) {
 
     const dirVec = new THREE.Vector3(U, V, W).normalize();
     arrow.setDirection(dirVec);
-    arrow.setLength(3);
+    arrow.setLength(arrowLength, headLength, headWidth);
   });
 
-  // Camera Orbit around Z-Up Axis
-  const elev = ((15 + Math.sin(currentFrame / 63) * 21) * Math.PI) / 180;
-  const azim = ((45 + currentFrame / 2) * Math.PI) / 180;
-  const radius = 60;
-
-  camera.position.x = radius * Math.cos(elev) * Math.cos(azim);
-  camera.position.y = radius * Math.cos(elev) * Math.sin(azim);
-  camera.position.z = radius * Math.sin(elev);
-  camera.lookAt(0, 0, 0);
-
-  efTimeDisplay.textContent = `frame = ${Math.floor(currentFrame)}`;
+  if (efTimeDisplay) {
+    efTimeDisplay.textContent = `frame = ${Math.floor(currentFrame)}`;
+  }
 }
 
 function animateEF() {
@@ -177,7 +191,7 @@ function animateEF() {
     frame += 1;
     updateFrame(frame);
   }
-  controls.update();
+  controls.update(); // Keeps full mouse drag/orbit controls active
   renderer.render(scene, camera);
   efAnimFrame = requestAnimationFrame(animateEF);
 }
@@ -198,9 +212,9 @@ function resetEFSimulation() {
 }
 
 // Event Listeners
-efPlayBtn.addEventListener('click', () => { efRunning = true; });
-efPauseBtn.addEventListener('click', () => { efRunning = false; });
-efResetBtn.addEventListener('click', resetEFSimulation);
+if (efPlayBtn) efPlayBtn.addEventListener('click', () => { efRunning = true; });
+if (efPauseBtn) efPauseBtn.addEventListener('click', () => { efRunning = false; });
+if (efResetBtn) efResetBtn.addEventListener('click', resetEFSimulation);
 
 [inputQ, inputPosX, inputPosY, inputPosZ, selectPlane].forEach((input) => {
   if (input) input.addEventListener('change', resetEFSimulation);
