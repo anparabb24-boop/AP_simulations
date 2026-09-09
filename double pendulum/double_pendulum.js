@@ -159,39 +159,20 @@ function animate() {
 
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
+  // Ensure non-zero width and height before rendering
+  canvas.width = rect.width || 600;
+  canvas.height = rect.height || 500;
   renderFrame();
 }
 
-// Event Listeners
-playButton.addEventListener('click', () => {
-  if (!isRunning) {
-    isRunning = true;
-    animate();
-  }
-});
-
-pauseButton.addEventListener('click', () => {
-  isRunning = false;
-  cancelAnimationFrame(animationFrameId);
-});
-
-resetButton.addEventListener('click', resetSimulation);
-
-[inputG, inputL1, inputL2, inputM1, inputM2, inputTh1].forEach((input) => {
-  input.addEventListener('change', resetSimulation);
-  input.addEventListener('input', resetSimulation);
-});
-
-window.addEventListener('resize', resizeCanvas);
-
-// Initialize canvas correctly
-window.addEventListener('DOMContentLoaded', () => {
+// Ensure execution happens after DOM layout is calculated
+window.addEventListener('load', () => {
   resizeCanvas();
   resetSimulation();
 });
 
-// Fallback init
+window.addEventListener('resize', resizeCanvas);
+
+// Fallback setup
 resizeCanvas();
 resetSimulation();
