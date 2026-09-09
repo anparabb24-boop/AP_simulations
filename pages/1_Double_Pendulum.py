@@ -90,7 +90,7 @@ t, x1, y1, x2, y2 = integrate(G, L1, L2, M1, M2, th1, w1, th2, w2, t_stop, dt)
 placeholder = st.empty()
 
 if run:
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=80)
     ax.set_xlim(-L, L)
     ax.set_ylim(-L, L + 0.5)
     ax.set_aspect("equal")
@@ -99,7 +99,11 @@ if run:
     (trace,) = ax.plot([], [], "-", lw=1)
     time_text = ax.text(0.05, 0.9, "", transform=ax.transAxes)
 
-    step = max(1, int(1 / speed))  # crude speed control by frame skipping
+    # Cap rendering to ~20 fps of *simulated* time, independent of dt.
+    # This is what actually controls how many times we call st.pyplot,
+    # which is the slow part (image re-encode + network transfer).
+    target_fps = 20
+    step = max(1, int(round((1 / target_fps) / dt / speed)))
     for i in range(0, len(t), step):
         thisx = [0, x1[i], x2[i]]
         thisy = [0, y1[i], y2[i]]
@@ -109,8 +113,8 @@ if run:
         trace.set_data(x2[start:i], y2[start:i])
         time_text.set_text(f"time = {i * dt:.1f}s")
 
-        placeholder.pyplot(fig)
-        time.sleep(dt * step / speed)
+        placeholder.pyplot(fig, clear_figure=False)
+        time.sleep(max(0, 1 / target_fps - 0.05))  # rough budget minus render time
 
     plt.close(fig)
     st.success("Done — adjust parameters in the sidebar and run again.")
