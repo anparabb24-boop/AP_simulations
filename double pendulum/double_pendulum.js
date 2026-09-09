@@ -160,8 +160,8 @@ function animate() {
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
   // Ensure non-zero width and height before rendering
-  canvas.width = rect.width || 600;
-  canvas.height = rect.height || 500;
+  canvas.width = rect.width || 900;
+  canvas.height = rect.height || 750;
   renderFrame();
 }
 
