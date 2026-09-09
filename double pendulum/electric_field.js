@@ -24,10 +24,10 @@ const fieldColor = 0x337BA4;
 const chargeColor = 0xC32828;
 
 // Hardcoded Visual Sizing Parameters
-const axisRadius = 0.35;    // Thickness of solid cylinder axes
+const axisRadius = 0.45;    // Thickness of solid cylinder axes
 const arrowLength = 5.0;    // Overall vector arrow length
 const headLength = 1.5;     // Arrowhead length
-const headWidth = 1.0;      // Arrowhead width/thickness
+const headWidth = 1.25;      // Arrowhead width/thickness
 
 // Dynamic Motion Parsers
 function getPositionAtTime(t) {
