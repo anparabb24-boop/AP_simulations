@@ -117,7 +117,7 @@ function renderFrame(i) {
   const start = Math.max(0, i - historyLen);
   if (i > start) {
     ctx.beginPath();
-    ctx.strokeStyle = '#2563eb';
+    ctx.strokeStyle = '#ff7f0e';
     ctx.lineWidth = 1.5;
 
     for (let k = start; k < i; k++) {
@@ -138,7 +138,7 @@ function renderFrame(i) {
   ctx.moveTo(originX, originY);
   ctx.lineTo(px1, py1);
   ctx.lineTo(px2, py2);
-  ctx.strokeStyle = '#151515';
+  ctx.strokeStyle = '#0066ff';
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -151,8 +151,8 @@ function renderFrame(i) {
   };
 
   drawCircle(originX, originY, 4, '#6a6a6a'); // Pivot
-  drawCircle(px1, py1, 6, '#151515');       // Mass 1
-  drawCircle(px2, py2, 6, '#151515');       // Mass 2
+  drawCircle(px1, py1, 6, '#0066ff');       // Mass 1
+  drawCircle(px2, py2, 6, '#0066ff');       // Mass 2
 
   // Update UI Time Text
   timeDisplay.textContent = `time = ${(i * dt).toFixed(1)}s`;
