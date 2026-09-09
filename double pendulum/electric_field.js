@@ -1,6 +1,5 @@
-const efCanvas = document.getElementById('efieldCanvas');
-const efCtx = efCanvas.getContext('2d');
-
+// Container and UI Setup
+const efContainer = document.getElementById('efieldCanvas').parentElement;
 const efPlayBtn = document.getElementById('efPlayButton');
 const efPauseBtn = document.getElementById('efPauseButton');
 const efResetBtn = document.getElementById('efResetButton');
@@ -15,6 +14,54 @@ let efRunning = false;
 let efAnimFrame = null;
 const efDt = 0.02;
 
+// 1. Scene, Camera, and Renderer Setup
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a); // Dark themed background
+
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+camera.position.set(200, 150, 200);
+
+// Replace existing canvas with Three.js webgl renderer
+const existingCanvas = document.getElementById('efieldCanvas');
+if (existingCanvas) existingCanvas.remove();
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.domElement.id = 'efieldCanvas';
+efContainer.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+// 2. Objects Creation: Charge and 3D Vector Grid
+const chargeGeo = new THREE.SphereGeometry(6, 32, 32);
+const chargeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d });
+const chargeMesh = new THREE.Mesh(chargeGeo, chargeMat);
+scene.add(chargeMesh);
+
+// Create 3D grid of vector arrows
+const arrowHelpers = [];
+const gridBounds = 120;
+const step = 40;
+
+for (let x = -gridBounds; x <= gridBounds; x += step) {
+  for (let y = -gridBounds; y <= gridBounds; y += step) {
+    for (let z = -gridBounds; z <= gridBounds; z += step) {
+      if (x === 0 && y === 0 && z === 0) continue;
+
+      const dir = new THREE.Vector3(x, y, z).normalize();
+      const origin = new THREE.Vector3(x, y, z);
+      const arrow = new THREE.ArrowHelper(dir, origin, 15, 0x0066ff, 4, 2);
+      
+      scene.add(arrow);
+      arrowHelpers.push({ arrow, origin });
+    }
+  }
+}
+
 function getEFParams() {
   return {
     q: (parseFloat(inputCharge.value) || 1.0) * 1e-6,
@@ -23,102 +70,78 @@ function getEFParams() {
   };
 }
 
-function resetEFSimulation() {
-  efRunning = false;
-  if (efAnimFrame) cancelAnimationFrame(efAnimFrame);
-  efTime = 0.0;
-  efTimeDisplay.textContent = 't = 0.0s';
-  renderEFFrame();
-}
-
-function renderEFFrame() {
-  efCtx.clearRect(0, 0, efCanvas.width, efCanvas.height);
+// 3. Math Update Loop
+function update3DEField() {
   const { q, beta, c } = getEFParams();
 
-  const centerX = efCanvas.width / 2;
-  const centerY = efCanvas.height / 2;
-  
-  // Moving point charge position along X axis
-  const qx = centerX + beta * c * (efTime - 2);
-  const qy = centerY;
+  // Position of moving charge in 3D along X axis
+  const qx = beta * c * (efTime - 2);
+  const qy = 0;
+  const qz = 0;
 
-  // Render Vector Grid
-  const gridSize = 30;
-  for (let x = gridSize; x < efCanvas.width; x += gridSize) {
-    for (let y = gridSize; y < efCanvas.height; y += gridSize) {
-      const dx = x - qx;
-      const dy = y - qy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+  chargeMesh.position.set(qx, qy, qz);
+  chargeMat.color.setHex(q >= 0 ? 0xff4d4d : 0x0066ff);
 
-      if (dist < 15) continue;
+  // Update vector field arrows
+  arrowHelpers.forEach(({ arrow, origin }) => {
+    const rx = origin.x - qx;
+    const ry = origin.y - qy;
+    const rz = origin.z - qz;
+    const dist = Math.sqrt(rx * rx + ry * ry + rz * rz);
 
-      // Retarded time vector field estimation
-      const retFactor = 1 - (beta * dx) / dist;
-      const EMag = (Math.sign(q) * 8000) / (dist * dist * (retFactor * retFactor || 1));
-      
-      const ex = (dx / dist) * EMag;
-      const ey = (dy / dist) * EMag;
+    if (dist < 10) return;
 
-      const len = Math.min(Math.sqrt(ex * ex + ey * ey), gridSize * 0.8);
-      const angle = Math.atan2(ey, ex);
+    // Retarded time factor calculation in 3D
+    const retFactor = 1 - (beta * rx) / dist;
+    const EMag = (Math.sign(q) * 120000) / (dist * dist * (retFactor * retFactor || 1));
 
-      // Draw vector arrows
-      efCtx.save();
-      efCtx.translate(x, y);
-      efCtx.rotate(angle);
-      efCtx.beginPath();
-      efCtx.moveTo(0, 0);
-      efCtx.lineTo(len, 0);
-      efCtx.strokeStyle = '#0066ff';
-      efCtx.lineWidth = 1.5;
-      efCtx.stroke();
+    const ex = (rx / dist) * EMag;
+    const ey = (ry / dist) * EMag;
+    const ez = (rz / dist) * EMag;
 
-      // Arrowhead
-      efCtx.beginPath();
-      efCtx.moveTo(len, 0);
-      efCtx.lineTo(len - 4, -3);
-      efCtx.lineTo(len - 4, 3);
-      efCtx.fillStyle = '#0066ff';
-      efCtx.fill();
-      efCtx.restore();
-    }
-  }
+    const vec = new THREE.Vector3(ex, ey, ez);
+    const len = Math.min(vec.length(), 25);
 
-  // Draw point charge
-  efCtx.beginPath();
-  efCtx.arc(qx, qy, 8, 0, 2 * Math.PI);
-  efCtx.fillStyle = q >= 0 ? '#ff4d4d' : '#0066ff';
-  efCtx.fill();
+    arrow.setDirection(vec.normalize());
+    arrow.setLength(len, Math.min(len * 0.3, 5), Math.min(len * 0.2, 3));
+  });
 
   efTimeDisplay.textContent = `t = ${efTime.toFixed(2)}s`;
 }
 
+function renderEFFrame() {
+  controls.update();
+  renderer.render(scene, camera);
+}
+
 function animateEF() {
-  if (!efRunning) return;
-  efTime += efDt;
+  if (efRunning) {
+    efTime += efDt;
+    update3DEField();
+  }
   renderEFFrame();
   efAnimFrame = requestAnimationFrame(animateEF);
 }
 
 function resizeEFCanvas() {
-  const rect = efCanvas.parentElement.getBoundingClientRect();
-  efCanvas.width = rect.width || 600;
-  efCanvas.height = rect.height || 500;
+  const width = efContainer.clientWidth || 600;
+  const height = efContainer.clientHeight || 500;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
   renderEFFrame();
 }
 
-efPlayBtn.addEventListener('click', () => {
-  if (!efRunning) {
-    efRunning = true;
-    animateEF();
-  }
-});
-
-efPauseBtn.addEventListener('click', () => {
+function resetEFSimulation() {
   efRunning = false;
-  if (efAnimFrame) cancelAnimationFrame(efAnimFrame);
-});
+  efTime = 0.0;
+  update3DEField();
+  renderEFFrame();
+}
 
+// Event Listeners
+efPlayBtn.addEventListener('click', () => { efRunning = true; });
+efPauseBtn.addEventListener('click', () => { efRunning = false; });
 efResetBtn.addEventListener('click', resetEFSimulation);
 
 [inputCharge, inputVel, inputSpeedC].forEach((elem) => {
@@ -126,3 +149,8 @@ efResetBtn.addEventListener('click', resetEFSimulation);
 });
 
 window.addEventListener('resize', resizeEFCanvas);
+
+// Initialize
+resizeEFCanvas();
+update3DEField();
+animateEF();
