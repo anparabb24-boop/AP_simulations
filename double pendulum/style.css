@@ -86,7 +86,7 @@ h1 {
 /* Base button styling matching the dark Play button style */
 .button {
   border: 1px solid #2a3441;
-  background: #1c2533;
+  background: #151515;
   color: #ffffff;
   border-radius: 10px;
   padding: 10px 16px;
@@ -151,7 +151,7 @@ h1 {
 
 .parameter {
   padding: 14px;
-  background: #1c2533;
+  background: #151515;
   border: 1px solid #2a3441;
   border-radius: 12px;
 }
