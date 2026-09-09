@@ -40,8 +40,10 @@ function resetSimulation() {
   cancelAnimationFrame(animationFrameId);
   readInputs();
 
-  const initialTh1 = (parseFloat(inputTh1.value) || 90) * (Math.PI / 180);
-  state = [initialTh1, 0, Math.PI / 2, 0];
+  const th1Rad = ((parseFloat(inputTh1.value) || 0) * Math.PI) / 180;
+  const th2Rad = ((parseFloat(inputTh2.value) || 0) * Math.PI) / 180;
+
+  state = [th1Rad, 0, th2Rad, 0];
   traceHistory = [];
   simTime = 0.0;
   timeDisplay.textContent = 'time = 0.0s';
@@ -159,20 +161,38 @@ function animate() {
 
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
-  // Ensure non-zero width and height before rendering
-  canvas.width = rect.width || 900;
-  canvas.height = rect.height || 750;
+  canvas.width = rect.width;
+  canvas.height = rect.height;
   renderFrame();
 }
 
-// Ensure execution happens after DOM layout is calculated
-window.addEventListener('load', () => {
-  resizeCanvas();
-  resetSimulation();
+// Listeners
+playButton.addEventListener('click', () => {
+  if (!isRunning && simTime < tStop) {
+    isRunning = true;
+    animate();
+  }
+});
+
+pauseButton.addEventListener('click', () => {
+  isRunning = false;
+  cancelAnimationFrame(animationFrameId);
+});
+
+resetButton.addEventListener('click', resetSimulation);
+
+[inputL1, inputL2, inputTh1, inputTh2, inputM1, inputM2, inputTStop].forEach((input) => {
+  input.addEventListener('change', resetSimulation);
+  input.addEventListener('input', resetSimulation);
 });
 
 window.addEventListener('resize', resizeCanvas);
 
-// Fallback setup
+// Canvas startup sequence
+window.addEventListener('DOMContentLoaded', () => {
+  resizeCanvas();
+  resetSimulation();
+});
+
 resizeCanvas();
 resetSimulation();
