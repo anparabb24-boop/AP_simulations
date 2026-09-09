@@ -1,4 +1,13 @@
-// HTML Input Elements
+// Canvas and UI elements
+const canvas = document.getElementById('simulationCanvas');
+const ctx = canvas.getContext('2d');
+
+const playButton = document.getElementById('playButton');
+const pauseButton = document.getElementById('pauseButton');
+const resetButton = document.getElementById('resetButton');
+const timeDisplay = document.getElementById('timeDisplay');
+
+// Dynamic input elements
 const inputG = document.getElementById('inputGravity');
 const inputL1 = document.getElementById('inputL1');
 const inputL2 = document.getElementById('inputL2');
@@ -6,15 +15,15 @@ const inputM1 = document.getElementById('inputM1');
 const inputM2 = document.getElementById('inputM2');
 const inputTh1 = document.getElementById('inputTh1');
 
-// Dynamic Physics Variables
+// Simulation parameters
 let G = parseFloat(inputG.value);
 let L1 = parseFloat(inputL1.value);
 let L2 = parseFloat(inputL2.value);
 let M1 = parseFloat(inputM1.value);
 let M2 = parseFloat(inputM2.value);
-let dt = 0.01;
+const dt = 0.01;
 
-// Simulation State
+// State array: [theta1, omega1, theta2, omega2]
 let state = [(parseFloat(inputTh1.value) * Math.PI) / 180, 0, (90 * Math.PI) / 180, 0];
 let traceHistory = [];
 let simTime = 0.0;
@@ -33,15 +42,17 @@ function resetSimulation() {
   isRunning = false;
   cancelAnimationFrame(animationFrameId);
   readInputs();
-  
+
   const initialTh1 = (parseFloat(inputTh1.value) || 90) * (Math.PI / 180);
   state = [initialTh1, 0, Math.PI / 2, 0];
   traceHistory = [];
   simTime = 0.0;
-  
+  timeDisplay.textContent = 'time = 0.0s';
+
   renderFrame();
 }
 
+// Equations of motion
 function derivs(s) {
   const dydx = [0, 0, 0, 0];
   dydx[0] = s[1];
@@ -53,16 +64,19 @@ function derivs(s) {
     (M2 * L1 * s[1] * s[1] * Math.sin(delta) * Math.cos(delta) +
       M2 * G * Math.sin(s[2]) * Math.cos(delta) +
       M2 * L2 * s[3] * s[3] * Math.sin(delta) -
-      (M1 + M2) * G * Math.sin(s[0])) / den1;
+      (M1 + M2) * G * Math.sin(s[0])) /
+    den1;
 
   dydx[2] = s[3];
+
   const den2 = (L2 / L1) * den1;
 
   dydx[3] =
     (-M2 * L2 * s[3] * s[3] * Math.sin(delta) * Math.cos(delta) +
       (M1 + M2) * G * Math.sin(s[0]) * Math.cos(delta) -
       (M1 + M2) * L1 * s[1] * s[1] * Math.sin(delta) -
-      (M1 + M2) * G * Math.sin(s[2])) / den2;
+      (M1 + M2) * G * Math.sin(s[2])) /
+    den2;
 
   return dydx;
 }
@@ -97,7 +111,7 @@ function renderFrame() {
   traceHistory.push({ x: px2, y: py2 });
   if (traceHistory.length > 50) traceHistory.shift();
 
-  // Draw trace
+  // 1. Draw Trace History (#ff7f0e)
   if (traceHistory.length > 1) {
     ctx.beginPath();
     ctx.strokeStyle = '#ff7f0e';
@@ -109,7 +123,7 @@ function renderFrame() {
     ctx.stroke();
   }
 
-  // Draw rods
+  // 2. Draw Pendulum Rods (Blue #0066ff)
   ctx.beginPath();
   ctx.moveTo(originX, originY);
   ctx.lineTo(px1, py1);
@@ -118,7 +132,7 @@ function renderFrame() {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Draw joints
+  // 3. Draw Joints / Bob Dots
   const drawCircle = (x, y, r, color) => {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
@@ -126,9 +140,9 @@ function renderFrame() {
     ctx.fill();
   };
 
-  drawCircle(originX, originY, 4, '#6a6a6a');
-  drawCircle(px1, py1, 6, '#0066ff');
-  drawCircle(px2, py2, 6, '#0066ff');
+  drawCircle(originX, originY, 4, '#6a6a6a'); // Pivot
+  drawCircle(px1, py1, 6, '#0066ff');        // Mass 1
+  drawCircle(px2, py2, 6, '#0066ff');        // Mass 2
 
   timeDisplay.textContent = `time = ${simTime.toFixed(1)}s`;
 }
@@ -142,9 +156,33 @@ function animate() {
   animationFrameId = requestAnimationFrame(animate);
 }
 
-// Add event listeners for inputs
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  renderFrame();
+}
+
+// Event Listeners
+playButton.addEventListener('click', () => {
+  if (!isRunning) {
+    isRunning = true;
+    animate();
+  }
+});
+
+pauseButton.addEventListener('click', () => {
+  isRunning = false;
+  cancelAnimationFrame(animationFrameId);
+});
+
+resetButton.addEventListener('click', resetSimulation);
+
 [inputG, inputL1, inputL2, inputM1, inputM2, inputTh1].forEach((input) => {
   input.addEventListener('change', resetSimulation);
 });
 
-resetButton.addEventListener('click', resetSimulation);
+window.addEventListener('resize', resizeCanvas);
+
+// Initialize canvas view
+resizeCanvas();

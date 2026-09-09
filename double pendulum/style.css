@@ -83,10 +83,9 @@ h1 {
   border-top: 1px solid #1f2937;
 }
 
-/* Base button styling matching the dark Play button style */
 .button {
   border: 1px solid #2a3441;
-  background: #151515;
+  background: #1c2533;
   color: #ffffff;
   border-radius: 10px;
   padding: 10px 16px;
@@ -151,21 +150,32 @@ h1 {
 
 .parameter {
   padding: 14px;
-  background: #151515;
+  background: #1c2533;
   border: 1px solid #2a3441;
   border-radius: 12px;
 }
 
-.parameter span {
+.parameter label {
   display: block;
   margin-bottom: 6px;
   color: #9ba3af;
   font-size: 0.82rem;
 }
 
-.parameter strong {
-  font-size: 0.98rem;
+.parameter input {
+  width: 100%;
+  background: #131b27;
+  border: 1px solid #2a3441;
+  border-radius: 6px;
   color: #ffffff;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.parameter input:focus {
+  border-color: #0066ff;
 }
 
 @media (max-width: 700px) {
@@ -203,27 +213,4 @@ h1 {
   .parameters {
     grid-template-columns: 1fr;
   }
-}
-
-.parameter label {
-  display: block;
-  margin-bottom: 6px;
-  color: #9ba3af;
-  font-size: 0.82rem;
-}
-
-.parameter input {
-  width: 100%;
-  background: #131b27;
-  border: 1px solid #2a3441;
-  border-radius: 6px;
-  color: #ffffff;
-  padding: 6px 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  outline: none;
-}
-
-.parameter input:focus {
-  border-color: #0066ff;
 }
