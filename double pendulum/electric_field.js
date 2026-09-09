@@ -1,27 +1,33 @@
-// Container and UI Setup
+// Setup Container and Controls
 const efContainer = document.getElementById('efieldCanvas').parentElement;
 const efPlayBtn = document.getElementById('efPlayButton');
 const efPauseBtn = document.getElementById('efPauseButton');
 const efResetBtn = document.getElementById('efResetButton');
 const efTimeDisplay = document.getElementById('efTimeDisplay');
 
-const inputCharge = document.getElementById('inputCharge');
-const inputVel = document.getElementById('inputVel');
-const inputSpeedC = document.getElementById('inputSpeedC');
-
-let efTime = 0.0;
+let efTime = 0;
+let frame = 0;
 let efRunning = false;
 let efAnimFrame = null;
-const efDt = 0.02;
 
-// 1. Scene, Camera, and Renderer Setup
+// Constants from Python Script
+const x_l = 30, y_l = 30, z_l = 30;
+const freq = 1 / 4;
+const q = 2;
+const k = 9000000000;
+const R = 5;
+const c = 0.4;
+const axisColor = 0x337BA4;
+const fieldColor = 0x337BA4;
+const chargeColor = 0xC32828;
+
+// 1. Scene, Camera, Renderer
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f172a); // Dark themed background
+scene.background = new THREE.Color(0x121111);
 
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-camera.position.set(200, 150, 200);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+camera.position.set(30, 30, 30);
 
-// Replace existing canvas with Three.js webgl renderer
 const existingCanvas = document.getElementById('efieldCanvas');
 if (existingCanvas) existingCanvas.remove();
 
@@ -32,94 +38,114 @@ efContainer.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambientLight);
+// 2. Solid Axes Setup (-x_l to x_l)
+function createAxis(p1, p2, color) {
+  const geom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+  const mat = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
+  return new THREE.Line(geom, mat);
+}
 
-// 2. Objects Creation: Charge and 3D Vector Grid
-const chargeGeo = new THREE.SphereGeometry(6, 32, 32);
-const chargeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d });
+scene.add(createAxis(new THREE.Vector3(-x_l, 0, 0), new THREE.Vector3(x_l, 0, 0), axisColor));
+scene.add(createAxis(new THREE.Vector3(0, -y_l, 0), new THREE.Vector3(0, y_l, 0), axisColor));
+scene.add(createAxis(new THREE.Vector3(0, 0, -z_l), new THREE.Vector3(0, 0, z_l), axisColor));
+
+// 3. Point Charge Sphere
+const chargeGeo = new THREE.SphereGeometry(1.2, 32, 32);
+const chargeMat = new THREE.MeshBasicMaterial({ color: chargeColor });
 const chargeMesh = new THREE.Mesh(chargeGeo, chargeMat);
 scene.add(chargeMesh);
 
-// Create 3D grid of vector arrows
-const arrowHelpers = [];
-const gridBounds = 120;
-const step = 40;
+// 4. Create XY Grid Sampling Points for Field Vectors
+const gridSize = 20; // 20x20 grid matching meshgrid density
+const gridPoints = [];
+const xVals = [];
+const yVals = [];
 
-for (let x = -gridBounds; x <= gridBounds; x += step) {
-  for (let y = -gridBounds; y <= gridBounds; y += step) {
-    for (let z = -gridBounds; z <= gridBounds; z += step) {
-      if (x === 0 && y === 0 && z === 0) continue;
+for (let i = 0; i < gridSize; i++) {
+  xVals.push(-x_l + (i * (2 * x_l)) / (gridSize - 1));
+  yVals.push(-y_l + (i * (2 * y_l)) / (gridSize - 1));
+}
 
-      const dir = new THREE.Vector3(x, y, z).normalize();
-      const origin = new THREE.Vector3(x, y, z);
-      const arrow = new THREE.ArrowHelper(dir, origin, 15, 0x0066ff, 4, 2);
-      
-      scene.add(arrow);
-      arrowHelpers.push({ arrow, origin });
-    }
+for (let i = 0; i < gridSize; i++) {
+  for (let j = 0; j < gridSize; j++) {
+    gridPoints.push({ x: xVals[i], y: yVals[j], z: 0 });
   }
 }
 
-function getEFParams() {
-  return {
-    q: (parseFloat(inputCharge.value) || 1.0) * 1e-6,
-    beta: parseFloat(inputVel.value) || 0.5,
-    c: parseFloat(inputSpeedC.value) || 150
-  };
-}
+// 5. Initialize Arrow Helpers for Quiver Plot
+const arrows = [];
+gridPoints.forEach((pt) => {
+  const dir = new THREE.Vector3(0, 0, 1);
+  const origin = new THREE.Vector3(pt.x, pt.y, pt.z);
+  const arrow = new THREE.ArrowHelper(dir, origin, 3, fieldColor, 0.8, 0.5);
+  arrow.line.material.transparent = true;
+  arrow.line.material.opacity = 0.5;
+  scene.add(arrow);
+  arrows.push({ arrow, origin });
+});
 
-// 3. Math Update Loop
-function update3DEField() {
-  const { q, beta, c } = getEFParams();
+// 6. Vector Math & Frame Update Logic
+function updateFrame(currentFrame) {
+  // 1. Position oscillating charge along Z axis
+  const x_pos = 0;
+  const y_pos = 0;
+  const z_pos = R * Math.sin(freq * currentFrame);
+  chargeMesh.position.set(x_pos, y_pos, z_pos);
 
-  // Position of moving charge in 3D along X axis
-  const qx = beta * c * (efTime - 2);
-  const qy = 0;
-  const qz = 0;
+  // 2. Update Vector Field (Lienard-Wiechert / Retarded Potential logic from Python script)
+  arrows.forEach(({ arrow, origin }, idx) => {
+    const X = origin.x;
+    const Y = origin.y;
+    const Z = origin.z;
 
-  chargeMesh.position.set(qx, qy, qz);
-  chargeMat.color.setHex(q >= 0 ? 0xff4d4d : 0x0066ff);
+    const dist_to_center = Math.sqrt(X * X + Y * Y + Z * Z);
+    const delay = dist_to_center / c;
+    const delayed_frame = currentFrame - delay;
 
-  // Update vector field arrows
-  arrowHelpers.forEach(({ arrow, origin }) => {
-    const rx = origin.x - qx;
-    const ry = origin.y - qy;
-    const rz = origin.z - qz;
-    const dist = Math.sqrt(rx * rx + ry * ry + rz * rz);
+    // Retarded charge offset calculation
+    const x_del = R * Math.cos(freq * delayed_frame);
 
-    if (dist < 10) return;
+    const dx = X - 0;
+    const dy = Y - 0;
+    const dz = Z - x_del;
 
-    // Retarded time factor calculation in 3D
-    const retFactor = 1 - (beta * rx) / dist;
-    const EMag = (Math.sign(q) * 120000) / (dist * dist * (retFactor * retFactor || 1));
+    const r2 = dx * dx + dy * dy + dz * dz + 0.01;
+    const r = Math.sqrt(r2);
 
-    const ex = (rx / dist) * EMag;
-    const ey = (ry / dist) * EMag;
-    const ez = (rz / dist) * EMag;
+    let U = (k * q * dx) / r2;
+    let V = (k * q * dy) / r2;
+    let W = (k * q * dz) / r2;
 
-    const vec = new THREE.Vector3(ex, ey, ez);
-    const len = Math.min(vec.length(), 25);
+    const mag = Math.sqrt(U * U + V * V + W * W) || 1e-6;
+    U /= mag;
+    V /= mag;
+    W /= mag;
 
-    arrow.setDirection(vec.normalize());
-    arrow.setLength(len, Math.min(len * 0.3, 5), Math.min(len * 0.2, 3));
+    const dirVec = new THREE.Vector3(U, V, W).normalize();
+    arrow.setDirection(dirVec);
+    arrow.setLength(3);
   });
 
-  efTimeDisplay.textContent = `t = ${efTime.toFixed(2)}s`;
-}
+  // 3. Camera Rotation Matching Matplotlib's view_init(elev, azim)
+  const elev = ((15 + Math.sin(currentFrame / 63) * 21) * Math.PI) / 180;
+  const azim = ((45 + currentFrame / 2) * Math.PI) / 180;
+  const radius = 60;
 
-function renderEFFrame() {
-  controls.update();
-  renderer.render(scene, camera);
+  camera.position.x = radius * Math.cos(elev) * Math.sin(azim);
+  camera.position.y = radius * Math.sin(elev);
+  camera.position.z = radius * Math.cos(elev) * Math.cos(azim);
+  camera.lookAt(0, 0, 0);
+
+  efTimeDisplay.textContent = `frame = ${Math.floor(currentFrame)}`;
 }
 
 function animateEF() {
   if (efRunning) {
-    efTime += efDt;
-    update3DEField();
+    frame += 1;
+    updateFrame(frame);
   }
-  renderEFFrame();
+  controls.update();
+  renderer.render(scene, camera);
   efAnimFrame = requestAnimationFrame(animateEF);
 }
 
@@ -129,14 +155,12 @@ function resizeEFCanvas() {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
-  renderEFFrame();
 }
 
 function resetEFSimulation() {
   efRunning = false;
-  efTime = 0.0;
-  update3DEField();
-  renderEFFrame();
+  frame = 0;
+  updateFrame(0);
 }
 
 // Event Listeners
@@ -144,13 +168,9 @@ efPlayBtn.addEventListener('click', () => { efRunning = true; });
 efPauseBtn.addEventListener('click', () => { efRunning = false; });
 efResetBtn.addEventListener('click', resetEFSimulation);
 
-[inputCharge, inputVel, inputSpeedC].forEach((elem) => {
-  elem.addEventListener('change', resetEFSimulation);
-});
-
 window.addEventListener('resize', resizeEFCanvas);
 
-// Initialize
+// Startup Initialization
 resizeEFCanvas();
-update3DEField();
+updateFrame(0);
 animateEF();
