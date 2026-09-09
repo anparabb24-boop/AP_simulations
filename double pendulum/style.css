@@ -13,7 +13,7 @@ body {
 
 body {
   background: #131b27;
-  color: #151515;
+  color: #f4f4f4;
 }
 
 .app {
@@ -31,19 +31,20 @@ body {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #6a6a6a;
+  color: #9ba3af;
 }
 
 h1 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 3.3rem);
   line-height: 1.05;
+  color: #ffffff;
 }
 
 .subtitle {
   max-width: 680px;
   margin: 12px 0 0;
-  color: #666;
+  color: #9ba3af;
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -51,9 +52,9 @@ h1 {
 .simulation-card,
 .info-card {
   background: #131b27;
-  border: 1px solid #131b27;
+  border: 1px solid #1f2937;
   border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
 .simulation-card {
@@ -79,13 +80,14 @@ h1 {
   gap: 10px;
   flex-wrap: wrap;
   padding: 18px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid #1f2937;
 }
 
+/* Base button styling matching the dark Play button style */
 .button {
-  border: 1px solid #0e0d0d;
-  background: #151515;
-  color: #151515;
+  border: 1px solid #2a3441;
+  background: #1c2533;
+  color: #ffffff;
   border-radius: 10px;
   padding: 10px 16px;
   font-size: 0.95rem;
@@ -98,8 +100,8 @@ h1 {
 }
 
 .button:hover {
-  background: #f4f4f4;
-  border-color: #bdbdbd;
+  background: #283344;
+  border-color: #3b4758;
 }
 
 .button:active {
@@ -109,7 +111,7 @@ h1 {
 .button.primary {
   background: #151515;
   color: #ffffff;
-  border-color: #151515;
+  border-color: #2a2a2a;
 }
 
 .button.primary:hover {
@@ -121,12 +123,12 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #707070;
+  color: #9ba3af;
   font-size: 0.9rem;
 }
 
 .time strong {
-  color: #151515;
+  color: #ffffff;
   font-variant-numeric: tabular-nums;
 }
 
@@ -138,6 +140,7 @@ h1 {
 .info-card h2 {
   margin: 0 0 18px;
   font-size: 1.1rem;
+  color: #ffffff;
 }
 
 .parameters {
@@ -148,19 +151,21 @@ h1 {
 
 .parameter {
   padding: 14px;
-  background: #f7f7f7;
+  background: #1c2533;
+  border: 1px solid #2a3441;
   border-radius: 12px;
 }
 
 .parameter span {
   display: block;
   margin-bottom: 6px;
-  color: #737373;
+  color: #9ba3af;
   font-size: 0.82rem;
 }
 
 .parameter strong {
   font-size: 0.98rem;
+  color: #ffffff;
 }
 
 @media (max-width: 700px) {
