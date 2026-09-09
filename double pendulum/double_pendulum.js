@@ -164,6 +164,7 @@ function resizeCanvas() {
 }
 
 // Event Listeners
+// Event Listeners
 playButton.addEventListener('click', () => {
   if (!isRunning) {
     isRunning = true;
@@ -180,9 +181,17 @@ resetButton.addEventListener('click', resetSimulation);
 
 [inputG, inputL1, inputL2, inputM1, inputM2, inputTh1].forEach((input) => {
   input.addEventListener('change', resetSimulation);
+  input.addEventListener('input', resetSimulation);
 });
 
 window.addEventListener('resize', resizeCanvas);
 
-// Initialize canvas view
+// Initialize canvas correctly
+window.addEventListener('DOMContentLoaded', () => {
+  resizeCanvas();
+  resetSimulation();
+});
+
+// Fallback init
 resizeCanvas();
+resetSimulation();
