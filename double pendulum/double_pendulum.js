@@ -37,7 +37,11 @@ function readInputs() {
 
 function resetSimulation() {
   isRunning = false;
-  cancelAnimationFrame(animationFrameId);
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+  
   readInputs();
 
   const th1Rad = ((parseFloat(inputTh1.value) || 0) * Math.PI) / 180;
@@ -63,7 +67,7 @@ function derivs(s) {
       M2 * G * Math.sin(s[2]) * Math.cos(delta) +
       M2 * L2 * s[3] * s[3] * Math.sin(delta) -
       (M1 + M2) * G * Math.sin(s[0])) /
-    den1;
+    (den1 || 1e-6);
 
   dydx[2] = s[3];
 
@@ -74,7 +78,7 @@ function derivs(s) {
       (M1 + M2) * G * Math.sin(s[0]) * Math.cos(delta) -
       (M1 + M2) * L1 * s[1] * s[1] * Math.sin(delta) -
       (M1 + M2) * G * Math.sin(s[2])) /
-    den2;
+    (den2 || 1e-6);
 
   return dydx;
 }
@@ -92,7 +96,7 @@ function renderFrame() {
 
   const originX = canvas.width / 2;
   const originY = canvas.height / 2;
-  const totalL = L1 + L2;
+  const totalL = (L1 || 1.0) + (L2 || 1.0);
   const scale = Math.min(canvas.width, canvas.height) / (2 * totalL + 1.0);
 
   const x1 = L1 * Math.sin(state[0]);
@@ -107,7 +111,7 @@ function renderFrame() {
 
   // Track trajectory
   traceHistory.push({ x: px2, y: py2 });
-  if (traceHistory.length > 50) traceHistory.shift();
+  if (traceHistory.length > 100) traceHistory.shift();
 
   // 1. Draw Trace
   if (traceHistory.length > 1) {
@@ -153,6 +157,7 @@ function animate() {
 
   if (simTime >= tStop) {
     isRunning = false;
+    cancelAnimationFrame(animationFrameId);
     return;
   }
 
@@ -161,14 +166,18 @@ function animate() {
 
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
+  canvas.width = rect.width || 600;
+  canvas.height = rect.height || 500;
   renderFrame();
 }
 
-// Listeners
+// Event Listeners
 playButton.addEventListener('click', () => {
-  if (!isRunning && simTime < tStop) {
+  readInputs();
+  if (simTime >= tStop) {
+    simTime = 0.0;
+  }
+  if (!isRunning) {
     isRunning = true;
     animate();
   }
@@ -176,23 +185,24 @@ playButton.addEventListener('click', () => {
 
 pauseButton.addEventListener('click', () => {
   isRunning = false;
-  cancelAnimationFrame(animationFrameId);
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
 });
 
 resetButton.addEventListener('click', resetSimulation);
 
 [inputL1, inputL2, inputTh1, inputTh2, inputM1, inputM2, inputTStop].forEach((input) => {
   input.addEventListener('change', resetSimulation);
-  input.addEventListener('input', resetSimulation);
 });
 
 window.addEventListener('resize', resizeCanvas);
 
-// Canvas startup sequence
 window.addEventListener('DOMContentLoaded', () => {
   resizeCanvas();
   resetSimulation();
 });
 
+// Initial invocation
 resizeCanvas();
 resetSimulation();
