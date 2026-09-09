@@ -1,15 +1,15 @@
-// Setup Container and Controls
+// Setup Container and UI Controls
 const efContainer = document.getElementById('efieldCanvas').parentElement;
 const efPlayBtn = document.getElementById('efPlayButton');
 const efPauseBtn = document.getElementById('efPauseButton');
 const efResetBtn = document.getElementById('efResetButton');
 const efTimeDisplay = document.getElementById('efTimeDisplay');
 
-// Parameter UI Elements
 const inputQ = document.getElementById('inputQ');
 const inputPosX = document.getElementById('inputPosX');
 const inputPosY = document.getElementById('inputPosY');
 const inputPosZ = document.getElementById('inputPosZ');
+const selectPlane = document.getElementById('selectPlane');
 
 let frame = 0;
 let efRunning = false;
@@ -48,12 +48,15 @@ function getPositionAtTime(t) {
   };
 }
 
-// 1. Scene, Camera, Renderer
+// 1. Scene, Camera, Renderer Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x121111);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-camera.position.set(30, 30, 30);
+
+// ORIENTATION FIX: Set Z as UP vector
+camera.up.set(0, 0, 1);
+camera.position.set(40, 40, 40);
 
 const existingCanvas = document.getElementById('efieldCanvas');
 if (existingCanvas) existingCanvas.remove();
@@ -65,7 +68,7 @@ efContainer.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// 2. Solid Axes Setup (-x_l to x_l)
+// 2. Axes Setup
 function createAxis(p1, p2, color) {
   const geom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
   const mat = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
@@ -82,42 +85,49 @@ const chargeMat = new THREE.MeshBasicMaterial({ color: chargeColor });
 const chargeMesh = new THREE.Mesh(chargeGeo, chargeMat);
 scene.add(chargeMesh);
 
-// 4. Create Grid Sampling Points
-const gridSize = 20;
-const gridPoints = [];
-const xVals = [];
-const yVals = [];
+// 4. Dynamic Grid Generator
+let arrows = [];
 
-for (let i = 0; i < gridSize; i++) {
-  xVals.push(-x_l + (i * (2 * x_l)) / (gridSize - 1));
-  yVals.push(-y_l + (i * (2 * y_l)) / (gridSize - 1));
-}
+function rebuildVectorGrid() {
+  // Remove previous vector arrows
+  arrows.forEach(({ arrow }) => scene.remove(arrow));
+  arrows = [];
 
-for (let i = 0; i < gridSize; i++) {
-  for (let j = 0; j < gridSize; j++) {
-    gridPoints.push({ x: xVals[i], y: yVals[j], z: 0 });
+  const plane = selectPlane ? selectPlane.value : 'XY';
+  const gridSize = 20;
+
+  for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+      let x = 0, y = 0, z = 0;
+
+      const u = -x_l + (i * (2 * x_l)) / (gridSize - 1);
+      const v = -y_l + (j * (2 * y_l)) / (gridSize - 1);
+
+      if (plane === 'XY') {
+        x = u; y = v; z = 0;
+      } else if (plane === 'YZ') {
+        x = 0; y = u; z = v;
+      } else if (plane === 'XZ') {
+        x = u; y = 0; z = v;
+      }
+
+      const dir = new THREE.Vector3(0, 0, 1);
+      const origin = new THREE.Vector3(x, y, z);
+      const arrow = new THREE.ArrowHelper(dir, origin, 3, fieldColor, 0.8, 0.5);
+      arrow.line.material.transparent = true;
+      arrow.line.material.opacity = 0.5;
+
+      scene.add(arrow);
+      arrows.push({ arrow, origin });
+    }
   }
 }
 
-// 5. Initialize Arrow Helpers
-const arrows = [];
-gridPoints.forEach((pt) => {
-  const dir = new THREE.Vector3(0, 0, 1);
-  const origin = new THREE.Vector3(pt.x, pt.y, pt.z);
-  const arrow = new THREE.ArrowHelper(dir, origin, 3, fieldColor, 0.8, 0.5);
-  arrow.line.material.transparent = true;
-  arrow.line.material.opacity = 0.5;
-  scene.add(arrow);
-  arrows.push({ arrow, origin });
-});
-
-// 6. Vector Math & Frame Update Logic
+// 5. Update Loop
 function updateFrame(currentFrame) {
-  // Current position of charge derived from user equations
   const currentPos = getPositionAtTime(currentFrame);
   chargeMesh.position.set(currentPos.x, currentPos.y, currentPos.z);
 
-  // Update Vector Field
   arrows.forEach(({ arrow, origin }) => {
     const X = origin.x;
     const Y = origin.y;
@@ -127,7 +137,6 @@ function updateFrame(currentFrame) {
     const delay = dist_to_center / c;
     const delayed_frame = currentFrame - delay;
 
-    // Retarded charge state
     const retPos = getPositionAtTime(delayed_frame);
 
     const dx = X - retPos.x;
@@ -135,7 +144,6 @@ function updateFrame(currentFrame) {
     const dz = Z - retPos.z;
 
     const r2 = dx * dx + dy * dy + dz * dz + 0.01;
-    const r = Math.sqrt(r2);
 
     let U = (k * currentPos.q * dx) / r2;
     let V = (k * currentPos.q * dy) / r2;
@@ -151,14 +159,14 @@ function updateFrame(currentFrame) {
     arrow.setLength(3);
   });
 
-  // Camera Orbit
+  // Camera Orbit around Z-Up Axis
   const elev = ((15 + Math.sin(currentFrame / 63) * 21) * Math.PI) / 180;
   const azim = ((45 + currentFrame / 2) * Math.PI) / 180;
   const radius = 60;
 
-  camera.position.x = radius * Math.cos(elev) * Math.sin(azim);
-  camera.position.y = radius * Math.sin(elev);
-  camera.position.z = radius * Math.cos(elev) * Math.cos(azim);
+  camera.position.x = radius * Math.cos(elev) * Math.cos(azim);
+  camera.position.y = radius * Math.cos(elev) * Math.sin(azim);
+  camera.position.z = radius * Math.sin(elev);
   camera.lookAt(0, 0, 0);
 
   efTimeDisplay.textContent = `frame = ${Math.floor(currentFrame)}`;
@@ -185,6 +193,7 @@ function resizeEFCanvas() {
 function resetEFSimulation() {
   efRunning = false;
   frame = 0;
+  rebuildVectorGrid();
   updateFrame(0);
 }
 
@@ -193,13 +202,13 @@ efPlayBtn.addEventListener('click', () => { efRunning = true; });
 efPauseBtn.addEventListener('click', () => { efRunning = false; });
 efResetBtn.addEventListener('click', resetEFSimulation);
 
-[inputQ, inputPosX, inputPosY, inputPosZ].forEach((input) => {
-  input.addEventListener('change', resetEFSimulation);
+[inputQ, inputPosX, inputPosY, inputPosZ, selectPlane].forEach((input) => {
+  if (input) input.addEventListener('change', resetEFSimulation);
 });
 
 window.addEventListener('resize', resizeEFCanvas);
 
 // Startup Initialization
 resizeEFCanvas();
-updateFrame(0);
+resetEFSimulation();
 animateEF();
