@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Double Pendulum Simulation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <p class="eyebrow">PHYSICS SIMULATION</p>
+        <h1>Double Pendulum</h1>
+        <p class="subtitle">
+          A browser-based version of the double-pendulum simulation from Python.
+        </p>
+      </div>
+    </header>
+
+    <section class="simulation-card">
+      <div class="canvas-wrap">
+        <canvas id="simulationCanvas"></canvas>
+      </div>
+
+      <div class="controls">
+        <button id="playButton" class="button primary">▶ Play</button>
+        <button id="pauseButton" class="button">⏸ Pause</button>
+        <button id="resetButton" class="button">↻ Reset</button>
+
+        <div class="time">
+          <span>Simulation time</span>
+          <strong id="timeDisplay">time = 0.0s</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-card">
+      <h2>Simulation parameters</h2>
+
+      <div class="parameters">
+        <div class="parameter">
+          <span>Gravity</span>
+          <strong>9.8 m/s²</strong>
+        </div>
+
+        <div class="parameter">
+          <span>Rod 1 length</span>
+          <strong>1.0 m</strong>
+        </div>
+
+        <div class="parameter">
+          <span>Rod 2 length</span>
+          <strong>1.0 m</strong>
+        </div>
+
+        <div class="parameter">
+          <span>Mass 1</span>
+          <strong>5.0 kg</strong>
+        </div>
+
+        <div class="parameter">
+          <span>Mass 2</span>
+          <strong>5.0 kg</strong>
+        </div>
+
+        <div class="parameter">
+          <span>Time step</span>
+          <strong>0.01 s</strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="double_pendulum.js"></script>
+</body>
+</html>
