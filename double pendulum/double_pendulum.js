@@ -1,4 +1,4 @@
-// Canvas and UI elements
+// Canvas & UI elements
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -7,35 +7,32 @@ const pauseButton = document.getElementById('pauseButton');
 const resetButton = document.getElementById('resetButton');
 const timeDisplay = document.getElementById('timeDisplay');
 
-// Dynamic input elements
-const inputG = document.getElementById('inputGravity');
+// Parameter inputs
 const inputL1 = document.getElementById('inputL1');
 const inputL2 = document.getElementById('inputL2');
+const inputTh1 = document.getElementById('inputTh1');
+const inputTh2 = document.getElementById('inputTh2');
 const inputM1 = document.getElementById('inputM1');
 const inputM2 = document.getElementById('inputM2');
-const inputTh1 = document.getElementById('inputTh1');
+const inputTStop = document.getElementById('inputTStop');
 
-// Simulation parameters
-let G = parseFloat(inputG.value);
-let L1 = parseFloat(inputL1.value);
-let L2 = parseFloat(inputL2.value);
-let M1 = parseFloat(inputM1.value);
-let M2 = parseFloat(inputM2.value);
+const G = 9.8;
 const dt = 0.01;
 
-// State array: [theta1, omega1, theta2, omega2]
-let state = [(parseFloat(inputTh1.value) * Math.PI) / 180, 0, (90 * Math.PI) / 180, 0];
+// Simulation variables
+let L1, L2, M1, M2, tStop;
+let state = [0, 0, 0, 0];
 let traceHistory = [];
 let simTime = 0.0;
 let isRunning = false;
 let animationFrameId = null;
 
 function readInputs() {
-  G = parseFloat(inputG.value) || 9.8;
   L1 = parseFloat(inputL1.value) || 1.0;
   L2 = parseFloat(inputL2.value) || 1.0;
   M1 = parseFloat(inputM1.value) || 5.0;
   M2 = parseFloat(inputM2.value) || 5.0;
+  tStop = parseFloat(inputTStop.value) || 10.0;
 }
 
 function resetSimulation() {
@@ -43,8 +40,10 @@ function resetSimulation() {
   cancelAnimationFrame(animationFrameId);
   readInputs();
 
-  const initialTh1 = (parseFloat(inputTh1.value) || 90) * (Math.PI / 180);
-  state = [initialTh1, 0, Math.PI / 2, 0];
+  const th1Rad = ((parseFloat(inputTh1.value) || 0) * Math.PI) / 180;
+  const th2Rad = ((parseFloat(inputTh2.value) || 0) * Math.PI) / 180;
+
+  state = [th1Rad, 0, th2Rad, 0];
   traceHistory = [];
   simTime = 0.0;
   timeDisplay.textContent = 'time = 0.0s';
@@ -52,7 +51,6 @@ function resetSimulation() {
   renderFrame();
 }
 
-// Equations of motion
 function derivs(s) {
   const dydx = [0, 0, 0, 0];
   dydx[0] = s[1];
@@ -107,11 +105,11 @@ function renderFrame() {
   const px2 = originX + x2 * scale;
   const py2 = originY - y2 * scale;
 
-  // Track tip trajectory
+  // Track trajectory
   traceHistory.push({ x: px2, y: py2 });
   if (traceHistory.length > 50) traceHistory.shift();
 
-  // 1. Draw Trace History (#ff7f0e)
+  // 1. Draw Trace
   if (traceHistory.length > 1) {
     ctx.beginPath();
     ctx.strokeStyle = '#ff7f0e';
@@ -123,7 +121,7 @@ function renderFrame() {
     ctx.stroke();
   }
 
-  // 2. Draw Pendulum Rods (Blue #0066ff)
+  // 2. Draw Rods
   ctx.beginPath();
   ctx.moveTo(originX, originY);
   ctx.lineTo(px1, py1);
@@ -132,7 +130,7 @@ function renderFrame() {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 3. Draw Joints / Bob Dots
+  // 3. Draw Joints
   const drawCircle = (x, y, r, color) => {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
@@ -140,9 +138,9 @@ function renderFrame() {
     ctx.fill();
   };
 
-  drawCircle(originX, originY, 4, '#6a6a6a'); // Pivot
-  drawCircle(px1, py1, 6, '#0066ff');        // Mass 1
-  drawCircle(px2, py2, 6, '#0066ff');        // Mass 2
+  drawCircle(originX, originY, 4, '#6a6a6a');
+  drawCircle(px1, py1, 6, '#0066ff');
+  drawCircle(px2, py2, 6, '#0066ff');
 
   timeDisplay.textContent = `time = ${simTime.toFixed(1)}s`;
 }
@@ -152,6 +150,11 @@ function animate() {
 
   stepPhysics();
   renderFrame();
+
+  if (simTime >= tStop) {
+    isRunning = false;
+    return;
+  }
 
   animationFrameId = requestAnimationFrame(animate);
 }
@@ -163,10 +166,9 @@ function resizeCanvas() {
   renderFrame();
 }
 
-// Event Listeners
-// Event Listeners
+// Listeners
 playButton.addEventListener('click', () => {
-  if (!isRunning) {
+  if (!isRunning && simTime < tStop) {
     isRunning = true;
     animate();
   }
@@ -179,19 +181,18 @@ pauseButton.addEventListener('click', () => {
 
 resetButton.addEventListener('click', resetSimulation);
 
-[inputG, inputL1, inputL2, inputM1, inputM2, inputTh1].forEach((input) => {
+[inputL1, inputL2, inputTh1, inputTh2, inputM1, inputM2, inputTStop].forEach((input) => {
   input.addEventListener('change', resetSimulation);
   input.addEventListener('input', resetSimulation);
 });
 
 window.addEventListener('resize', resizeCanvas);
 
-// Initialize canvas correctly
+// Canvas startup sequence
 window.addEventListener('DOMContentLoaded', () => {
   resizeCanvas();
   resetSimulation();
 });
 
-// Fallback init
 resizeCanvas();
 resetSimulation();

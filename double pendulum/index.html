@@ -41,11 +41,6 @@
 
       <div class="parameters">
         <div class="parameter">
-          <label for="inputGravity">Gravity (m/s²)</label>
-          <input type="number" id="inputGravity" value="9.8" step="0.1" min="0" />
-        </div>
-
-        <div class="parameter">
           <label for="inputL1">Rod 1 length (m)</label>
           <input type="number" id="inputL1" value="1.0" step="0.1" min="0.1" />
         </div>
@@ -53,6 +48,16 @@
         <div class="parameter">
           <label for="inputL2">Rod 2 length (m)</label>
           <input type="number" id="inputL2" value="1.0" step="0.1" min="0.1" />
+        </div>
+
+        <div class="parameter">
+          <label for="inputTh1">Angle 1 (°)</label>
+          <input type="number" id="inputTh1" value="90" step="1" />
+        </div>
+
+        <div class="parameter">
+          <label for="inputTh2">Angle 2 (°)</label>
+          <input type="number" id="inputTh2" value="90" step="1" />
         </div>
 
         <div class="parameter">
@@ -66,8 +71,8 @@
         </div>
 
         <div class="parameter">
-          <label for="inputTh1">Initial Angle 1 (°)</label>
-          <input type="number" id="inputTh1" value="90" step="1" />
+          <label for="inputTStop">Max Sim Time (s)</label>
+          <input type="number" id="inputTStop" value="10" step="1" min="1" />
         </div>
       </div>
     </section>
