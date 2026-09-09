@@ -12,7 +12,7 @@ body {
 }
 
 body {
-  background: #283d61;
+  background: #131b27;
   color: #151515;
 }
 
@@ -50,8 +50,8 @@ h1 {
 
 .simulation-card,
 .info-card {
-  background: #283d61;
-  border: 1px solid #283d61;
+  background: #131b27;
+  border: 1px solid #131b27;
   border-radius: 18px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
@@ -64,7 +64,7 @@ h1 {
   width: 100%;
   height: min(68vw, 700px);
   min-height: 420px;
-  background: #283d61;
+  background: #131b27;
 }
 
 #simulationCanvas {
@@ -84,8 +84,8 @@ h1 {
 
 .button {
   border: 1px solid #0e0d0d;
-  background: #0dff00;
-  color: #0dff00;
+  background: #151515;
+  color: #151515;
   border-radius: 10px;
   padding: 10px 16px;
   font-size: 0.95rem;
