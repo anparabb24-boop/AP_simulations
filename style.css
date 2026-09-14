@@ -155,6 +155,22 @@ h1 {
   font-size: 0.9rem;
 }
 
+.axis-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #dce7ee;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.axis-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b8db7;
+}
+
 .time strong {
   color: #ffffff;
   font-variant-numeric: tabular-nums;

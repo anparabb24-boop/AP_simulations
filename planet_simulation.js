@@ -7,12 +7,14 @@ const planetTimeDisplay = document.getElementById('planetTimeDisplay');
 const planetTStopInput = document.getElementById('planetTStop');
 const planetMassCountInput = document.getElementById('planetMassCount');
 const planetHoverInfo = document.getElementById('planetHoverInfo');
+const planetAxisToggle = document.getElementById('planetAxisToggle');
 
 const planetGravity = 1.0;
 const planetRestitution = 0.97;
 const planetRadius = 15;
 const planetArrowLength = 0.25;
 const planetMaximumVelocity = 1.0;
+const planetSnapStep = 0.1;
 const planetInitialState = [
   { x: 0.95, y: 0.95, vx: 0, vy: -0.5, mass: 1 },
   { x: 0.95, y: -0.95, vx: -0.5, vy: 0, mass: 1 },
@@ -35,6 +37,14 @@ let planetWasRunningBeforeDrag = false;
 let planetDragStartX = 0;
 let planetDragStartY = 0;
 let planetDragMoved = false;
+
+function planetAxisEnabled() {
+  return Boolean(planetAxisToggle?.checked);
+}
+
+function planetSnapValue(value, step = planetSnapStep) {
+  return Math.round(value / step) * step;
+}
 
 function planetReadInputs() {
   planetStopTime = Math.max(1, Number.parseFloat(planetTStopInput?.value) || 50);
@@ -223,6 +233,8 @@ function planetRender() {
   planetContext.fillStyle = '#05080d';
   planetContext.fillRect(0, 0, width, height);
 
+  if (planetAxisEnabled()) planetRenderAxis(width, height, scaleX, scaleY);
+
   planetBodies.forEach((body, index) => {
     const x = width / 2 + body.x * scaleX;
     const y = height / 2 - body.y * scaleY;
@@ -250,6 +262,35 @@ function planetRender() {
   if (planetTimeDisplay) {
     planetTimeDisplay.textContent = `time = ${planetTime.toFixed(1)}s`;
   }
+}
+
+function planetRenderAxis(width, height, scaleX, scaleY) {
+  planetContext.save();
+  planetContext.lineWidth = 1;
+  planetContext.strokeStyle = 'rgba(110, 150, 175, 0.2)';
+  for (let coordinate = -1; coordinate <= 1.0001; coordinate += planetSnapStep) {
+    const x = width / 2 + coordinate * scaleX;
+    const y = height / 2 - coordinate * scaleY;
+    planetContext.beginPath();
+    planetContext.moveTo(x, 0);
+    planetContext.lineTo(x, height);
+    planetContext.moveTo(0, y);
+    planetContext.lineTo(width, y);
+    planetContext.stroke();
+  }
+  planetContext.strokeStyle = 'rgba(225, 240, 250, 0.75)';
+  planetContext.lineWidth = 2;
+  planetContext.beginPath();
+  planetContext.moveTo(0, height / 2);
+  planetContext.lineTo(width, height / 2);
+  planetContext.moveTo(width / 2, 0);
+  planetContext.lineTo(width / 2, height);
+  planetContext.stroke();
+  planetContext.fillStyle = 'rgba(225, 240, 250, 0.85)';
+  planetContext.font = '12px sans-serif';
+  planetContext.fillText('x', width - 16, height / 2 - 8);
+  planetContext.fillText('y', width / 2 + 8, 16);
+  planetContext.restore();
 }
 
 function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
@@ -353,8 +394,8 @@ function planetMoveDraggedBody(event) {
   if (planetDraggedIndex === null) return;
   const pointer = planetPointerPosition(event);
   const body = planetBodies[planetDraggedIndex];
-  body.x = Math.max(-1, Math.min(1, pointer.x));
-  body.y = Math.max(-1, Math.min(1, pointer.y));
+  body.x = Math.max(-1, Math.min(1, planetAxisEnabled() ? planetSnapValue(pointer.x) : pointer.x));
+  body.y = Math.max(-1, Math.min(1, planetAxisEnabled() ? planetSnapValue(pointer.y) : pointer.y));
   planetRender();
 }
 
@@ -373,8 +414,15 @@ function planetMoveDraggedVelocity(event) {
     pointerDistance / velocityScale * planetMaximumVelocity
   );
   if (pointerDistance > 0) {
-    body.vx = velocityX / pointerDistance * velocityMagnitude;
-    body.vy = velocityY / pointerDistance * velocityMagnitude;
+    let nextVelocityX = velocityX / pointerDistance * velocityMagnitude;
+    let nextVelocityY = velocityY / pointerDistance * velocityMagnitude;
+    if (planetAxisEnabled()) {
+      const velocityStep = planetMaximumVelocity * planetSnapStep;
+      nextVelocityX = planetSnapValue(nextVelocityX, velocityStep);
+      nextVelocityY = planetSnapValue(nextVelocityY, velocityStep);
+    }
+    body.vx = nextVelocityX;
+    body.vy = nextVelocityY;
   }
   planetRender();
 }
@@ -535,5 +583,6 @@ planetCanvas?.addEventListener('pointerleave', () => {
   planetRender();
 });
 window.addEventListener('resize', planetResize);
+planetAxisToggle?.addEventListener('change', planetRender);
 planetResize();
 planetReset();
