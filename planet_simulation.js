@@ -11,7 +11,8 @@ const planetHoverInfo = document.getElementById('planetHoverInfo');
 const planetGravity = 1.0;
 const planetRestitution = 0.97;
 const planetRadius = 15;
-const planetMaximumVelocity = 100;
+const planetArrowLength = 0.25;
+const planetMaximumVelocity = 25;
 const planetInitialState = [
   { x: 0.95, y: 0.95, vx: 0, vy: -0.5, mass: 1 },
   { x: 0.95, y: -0.95, vx: -0.5, vy: 0, mass: 1 },
@@ -242,7 +243,7 @@ function planetRender() {
     }
 
     if (index === planetSelectedIndex) {
-      planetRenderVelocityArrow(body, x, y, Math.min(scaleX, scaleY));
+      planetRenderVelocityArrow(body, x, y, Math.min(scaleX, scaleY) * planetArrowLength);
     }
   });
 
@@ -263,7 +264,7 @@ function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
   const arrowColor = `hsl(${220 - colorRatio * 220}, 90%, 60%)`;
 
   const angle = Math.atan2(arrowEndY - startY, arrowEndX - startX);
-  const arrowHeadLength = 9;
+  const arrowHeadLength = 12;
   const arrowHeadAngle = Math.PI / 6;
   planetContext.beginPath();
   planetContext.moveTo(startX, startY);
@@ -279,7 +280,7 @@ function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
     arrowEndY - arrowHeadLength * Math.sin(angle + arrowHeadAngle)
   );
   planetContext.strokeStyle = arrowColor;
-  planetContext.lineWidth = 3;
+  planetContext.lineWidth = 6;
   planetContext.lineCap = 'round';
   planetContext.stroke();
 }
@@ -337,7 +338,7 @@ function planetDistanceToSegment(pointX, pointY, startX, startY, endX, endY) {
 function planetFindVelocityArrowAtPointer(canvasX, canvasY) {
   if (planetSelectedIndex === null) return false;
   const body = planetBodies[planetSelectedIndex];
-  const scale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2);
+  const scale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2) * planetArrowLength;
   const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
   const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
   const velocityMagnitude = Math.hypot(body.vx, body.vy);
