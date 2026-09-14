@@ -68,6 +68,12 @@ h1 {
   align-items: start;
 }
 
+.planet-layout .canvas-wrap {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 11 / 7;
+}
+
 .planet-details {
   min-height: 100%;
   padding: 20px;
@@ -287,6 +293,12 @@ h1 {
   .canvas-wrap {
     height: 75vw;
     min-height: 320px;
+  }
+
+  .planet-layout .canvas-wrap {
+    height: 75vw;
+    min-height: 320px;
+    aspect-ratio: auto;
   }
 
   .planet-layout {
