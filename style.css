@@ -62,6 +62,7 @@ h1 {
 }
 
 .canvas-wrap {
+  position: relative;
   width: 100%;
   height: min(68vw, 700px);
   min-height: 420px;
@@ -77,6 +78,23 @@ h1 {
 
 #planetCanvas {
   background: #05080d;
+}
+
+.planet-hover-info {
+  position: absolute;
+  z-index: 2;
+  display: none;
+  min-width: 190px;
+  padding: 10px 12px;
+  background: rgba(12, 20, 31, 0.94);
+  border: 1px solid #3b8db7;
+  border-radius: 8px;
+  color: #e8f7ff;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
 }
 
 .controls {

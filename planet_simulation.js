@@ -5,16 +5,18 @@ const planetPauseButton = document.getElementById('planetPauseButton');
 const planetResetButton = document.getElementById('planetResetButton');
 const planetTimeDisplay = document.getElementById('planetTimeDisplay');
 const planetTStopInput = document.getElementById('planetTStop');
+const planetMassCountInput = document.getElementById('planetMassCount');
+const planetHoverInfo = document.getElementById('planetHoverInfo');
 
 const planetGravity = 1.0;
 const planetRestitution = 0.97;
 const planetRadius = 15;
 const planetInitialState = [
-  { x: 0.95, y: 0.95, vx: 0, vy: -0.5 },
-  { x: 0.95, y: -0.95, vx: -0.5, vy: 0 },
-  { x: 0, y: 0, vx: 0, vy: 0 },
-  { x: -0.95, y: 0.95, vx: 0.5, vy: 0 },
-  { x: -0.95, y: -0.95, vx: 0, vy: 0.5 }
+  { x: 0.95, y: 0.95, vx: 0, vy: -0.5, mass: 1 },
+  { x: 0.95, y: -0.95, vx: -0.5, vy: 0, mass: 1 },
+  { x: 0, y: 0, vx: 0, vy: 0, mass: 1 },
+  { x: -0.95, y: 0.95, vx: 0.5, vy: 0, mass: 1 },
+  { x: -0.95, y: -0.95, vx: 0, vy: 0.5, mass: 1 }
 ];
 
 let planetBodies = [];
@@ -23,16 +25,38 @@ let planetStopTime = 50;
 let planetRunning = false;
 let planetAnimationFrame = null;
 let planetPreviousTimestamp = 0;
+let planetHoveredIndex = null;
 
 function planetReadInputs() {
   planetStopTime = Math.max(1, Number.parseFloat(planetTStopInput?.value) || 50);
 }
 
+function planetCreateInitialBodies(count) {
+  if (count === planetInitialState.length) {
+    return planetInitialState.map((body) => ({ ...body }));
+  }
+
+  return Array.from({ length: count }, (_, index) => {
+    const angle = (index / count) * Math.PI * 2;
+    const radius = 0.62;
+    return {
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+      vx: -Math.sin(angle) * 0.28,
+      vy: Math.cos(angle) * 0.28,
+      mass: 1
+    };
+  });
+}
+
 function planetReset() {
   planetReadInputs();
-  planetBodies = planetInitialState.map((body) => ({ ...body }));
+  const requestedCount = Math.min(20, Math.max(2, Number.parseInt(planetMassCountInput?.value, 10) || 5));
+  if (planetMassCountInput) planetMassCountInput.value = requestedCount;
+  planetBodies = planetCreateInitialBodies(requestedCount);
   planetTime = 0;
   planetRunning = false;
+  planetHoveredIndex = null;
   if (planetAnimationFrame) cancelAnimationFrame(planetAnimationFrame);
   planetAnimationFrame = null;
   planetRender();
@@ -50,8 +74,8 @@ function planetAccelerations(positions) {
       const distance = Math.sqrt(distanceSquared);
       if (distance === 0) return;
 
-      acceleration.x += planetGravity * dx / (distanceSquared * distance);
-      acceleration.y += planetGravity * dy / (distanceSquared * distance);
+      acceleration.x += planetGravity * (otherPosition.mass || 1) * dx / (distanceSquared * distance);
+      acceleration.y += planetGravity * (otherPosition.mass || 1) * dy / (distanceSquared * distance);
     });
 
     return acceleration;
@@ -68,12 +92,13 @@ function planetDerivative(positions, velocities) {
 function planetAddScaled(base, derivative, scale) {
   return base.map((body, index) => ({
     x: body.x + derivative[index].x * scale,
-    y: body.y + derivative[index].y * scale
+    y: body.y + derivative[index].y * scale,
+    mass: body.mass
   }));
 }
 
 function planetIntegrate(dt) {
-  const positions = planetBodies.map(({ x, y }) => ({ x, y }));
+  const positions = planetBodies.map(({ x, y, mass }) => ({ x, y, mass }));
   const velocities = planetBodies.map(({ vx, vy }) => ({ x: vx, y: vy }));
   const first = planetDerivative(positions, velocities);
   const second = planetDerivative(
@@ -119,23 +144,28 @@ function planetResolveCollision(first, second, scaleX, scaleY) {
   const normalX = dx / distance;
   const normalY = dy / distance;
   const overlap = minimumDistance - distance;
-  first.x -= normalX * overlap * 0.5 / scaleX;
-  first.y -= normalY * overlap * 0.5 / scaleY;
-  second.x += normalX * overlap * 0.5 / scaleX;
-  second.y += normalY * overlap * 0.5 / scaleY;
+  const firstMass = first.mass || 1;
+  const secondMass = second.mass || 1;
+  const inverseMassTotal = 1 / firstMass + 1 / secondMass;
+  const firstCorrection = (1 / firstMass) / inverseMassTotal;
+  const secondCorrection = (1 / secondMass) / inverseMassTotal;
+  first.x -= normalX * overlap * firstCorrection / scaleX;
+  first.y -= normalY * overlap * firstCorrection / scaleY;
+  second.x += normalX * overlap * secondCorrection / scaleX;
+  second.y += normalY * overlap * secondCorrection / scaleY;
 
   const relativeVelocityX = (second.vx - first.vx) * scaleX;
   const relativeVelocityY = (second.vy - first.vy) * scaleY;
   const velocityAlongNormal = relativeVelocityX * normalX + relativeVelocityY * normalY;
   if (velocityAlongNormal >= 0) return;
 
-  const impulseMagnitude = -(1 + planetRestitution) * velocityAlongNormal / 2;
+  const impulseMagnitude = -(1 + planetRestitution) * velocityAlongNormal / inverseMassTotal;
   const impulseX = impulseMagnitude * normalX;
   const impulseY = impulseMagnitude * normalY;
-  first.vx -= impulseX / scaleX;
-  first.vy -= impulseY / scaleY;
-  second.vx += impulseX / scaleX;
-  second.vy += impulseY / scaleY;
+  first.vx -= impulseX / scaleX / firstMass;
+  first.vy -= impulseY / scaleY / firstMass;
+  second.vx += impulseX / scaleX / secondMass;
+  second.vy += impulseY / scaleY / secondMass;
 }
 
 function planetApplyBoundaries(body, scaleX, scaleY) {
@@ -193,11 +223,67 @@ function planetRender() {
     planetContext.arc(x, y, planetRadius, 0, Math.PI * 2);
     planetContext.fillStyle = glow;
     planetContext.fill();
+
+    if (index === planetHoveredIndex) {
+      planetContext.beginPath();
+      planetContext.arc(x, y, planetRadius + 5, 0, Math.PI * 2);
+      planetContext.strokeStyle = '#ffffff';
+      planetContext.lineWidth = 2;
+      planetContext.stroke();
+    }
   });
 
   if (planetTimeDisplay) {
     planetTimeDisplay.textContent = `time = ${planetTime.toFixed(1)}s`;
   }
+}
+
+function planetFormatVector(x, y) {
+  return `(${x.toFixed(3)}, ${y.toFixed(3)})`;
+}
+
+function planetHandlePointerMove(event) {
+  if (!planetCanvas || !planetHoverInfo) return;
+  const rect = planetCanvas.getBoundingClientRect();
+  const scaleX = planetCanvas.width / 2;
+  const scaleY = planetCanvas.height / 2;
+  const pointerX = (event.clientX - rect.left) * (planetCanvas.width / rect.width);
+  const pointerY = (event.clientY - rect.top) * (planetCanvas.height / rect.height);
+  let closestIndex = null;
+  let closestDistance = Infinity;
+
+  planetBodies.forEach((body, index) => {
+    const bodyX = planetCanvas.width / 2 + body.x * scaleX;
+    const bodyY = planetCanvas.height / 2 - body.y * scaleY;
+    const distance = Math.hypot(pointerX - bodyX, pointerY - bodyY);
+    if (distance <= 24 && distance < closestDistance) {
+      closestIndex = index;
+      closestDistance = distance;
+    }
+  });
+
+  planetHoveredIndex = closestIndex;
+  if (closestIndex === null) {
+    planetHoverInfo.style.display = 'none';
+    planetRender();
+    return;
+  }
+
+  const body = planetBodies[closestIndex];
+  planetHoverInfo.innerHTML = [
+    `<strong>Mass ${closestIndex + 1}</strong>`,
+    `Position: ${planetFormatVector(body.x, body.y)}`,
+    `Velocity: ${planetFormatVector(body.vx, body.vy)}`,
+    `Mass: ${body.mass.toFixed(2)}`
+  ].join('<br>');
+  const tooltipWidth = 205;
+  const tooltipHeight = 94;
+  const left = Math.min(Math.max(8, event.clientX - rect.left + 14), rect.width - tooltipWidth - 8);
+  const top = Math.min(Math.max(8, event.clientY - rect.top + 14), rect.height - tooltipHeight - 8);
+  planetHoverInfo.style.left = `${left}px`;
+  planetHoverInfo.style.top = `${top}px`;
+  planetHoverInfo.style.display = 'block';
+  planetRender();
 }
 
 function planetResize() {
@@ -242,6 +328,13 @@ planetPauseButton?.addEventListener('click', () => {
 
 planetResetButton?.addEventListener('click', planetReset);
 planetTStopInput?.addEventListener('change', planetReset);
+planetMassCountInput?.addEventListener('change', planetReset);
+planetCanvas?.addEventListener('mousemove', planetHandlePointerMove);
+planetCanvas?.addEventListener('mouseleave', () => {
+  planetHoveredIndex = null;
+  if (planetHoverInfo) planetHoverInfo.style.display = 'none';
+  planetRender();
+});
 window.addEventListener('resize', planetResize);
 planetResize();
 planetReset();

@@ -80,6 +80,7 @@
       <section class="simulation-card">
         <div class="canvas-wrap">
           <canvas id="planetCanvas"></canvas>
+          <div id="planetHoverInfo" class="planet-hover-info" role="status" aria-live="polite"></div>
         </div>
         <div class="controls">
           <button id="planetPlayButton" class="button primary">▶ Play</button>
@@ -95,6 +96,10 @@
       <section class="info-card">
         <h2>Simulation parameters</h2>
         <div class="parameters">
+          <div class="parameter">
+            <label for="planetMassCount">Number of masses</label>
+            <input type="number" id="planetMassCount" value="5" step="1" min="2" max="20" />
+          </div>
           <div class="parameter">
             <label for="planetTStop">Max Sim Time (s)</label>
             <input type="number" id="planetTStop" value="50" step="1" min="1" />
