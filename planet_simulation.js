@@ -28,6 +28,7 @@ let planetPreviousTimestamp = 0;
 let planetHoveredIndex = null;
 let planetSelectedIndex = null;
 let planetDraggedIndex = null;
+let planetVelocityDraggedIndex = null;
 let planetWasRunningBeforeDrag = false;
 let planetDragStartX = 0;
 let planetDragStartY = 0;
@@ -313,6 +314,33 @@ function planetFindBodyAtPointer(canvasX, canvasY) {
   return closestIndex;
 }
 
+function planetDistanceToSegment(pointX, pointY, startX, startY, endX, endY) {
+  const segmentX = endX - startX;
+  const segmentY = endY - startY;
+  const segmentLengthSquared = segmentX * segmentX + segmentY * segmentY;
+  if (segmentLengthSquared === 0) return Infinity;
+
+  const projection = Math.max(0, Math.min(1, (
+    (pointX - startX) * segmentX + (pointY - startY) * segmentY
+  ) / segmentLengthSquared));
+  const closestX = startX + projection * segmentX;
+  const closestY = startY + projection * segmentY;
+  return Math.hypot(pointX - closestX, pointY - closestY);
+}
+
+function planetFindVelocityArrowAtPointer(canvasX, canvasY) {
+  if (planetSelectedIndex === null) return false;
+  const body = planetBodies[planetSelectedIndex];
+  const scale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2);
+  const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
+  const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
+  const endX = startX + body.vx * scale;
+  const endY = startY - body.vy * scale;
+  const distanceFromBody = Math.hypot(canvasX - startX, canvasY - startY);
+  if (distanceFromBody <= planetRadius + 6 || Math.hypot(body.vx, body.vy) === 0) return false;
+  return planetDistanceToSegment(canvasX, canvasY, startX, startY, endX, endY) <= 12;
+}
+
 function planetMoveDraggedBody(event) {
   if (planetDraggedIndex === null) return;
   const pointer = planetPointerPosition(event);
@@ -322,8 +350,24 @@ function planetMoveDraggedBody(event) {
   planetRender();
 }
 
+function planetMoveDraggedVelocity(event) {
+  if (planetVelocityDraggedIndex === null) return;
+  const pointer = planetPointerPosition(event);
+  const body = planetBodies[planetVelocityDraggedIndex];
+  const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
+  const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
+  const velocityScale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2);
+  body.vx = (pointer.canvasX - startX) / velocityScale;
+  body.vy = (startY - pointer.canvasY) / velocityScale;
+  planetRender();
+}
+
 function planetHandlePointerMove(event) {
   if (!planetCanvas || !planetHoverInfo) return;
+  if (planetVelocityDraggedIndex !== null) {
+    planetMoveDraggedVelocity(event);
+    return;
+  }
   if (planetDraggedIndex !== null) {
     if (!planetDragMoved && Math.hypot(
       event.clientX - planetDragStartX,
@@ -369,6 +413,18 @@ function planetHandlePointerMove(event) {
 function planetHandlePointerDown(event) {
   if (!planetCanvas) return;
   const pointer = planetPointerPosition(event);
+  if (planetFindVelocityArrowAtPointer(pointer.canvasX, pointer.canvasY)) {
+    planetVelocityDraggedIndex = planetSelectedIndex;
+    planetWasRunningBeforeDrag = planetRunning;
+    planetRunning = false;
+    if (planetAnimationFrame) cancelAnimationFrame(planetAnimationFrame);
+    planetAnimationFrame = null;
+    planetCanvas.setPointerCapture?.(event.pointerId);
+    planetCanvas.classList.add('is-dragging');
+    if (planetHoverInfo) planetHoverInfo.style.display = 'none';
+    return;
+  }
+
   const bodyIndex = planetFindBodyAtPointer(pointer.canvasX, pointer.canvasY);
   if (bodyIndex === null) {
     planetSelectedIndex = null;
@@ -393,9 +449,10 @@ function planetHandlePointerDown(event) {
 }
 
 function planetHandlePointerUp(event) {
-  if (planetDraggedIndex === null) return;
+  if (planetDraggedIndex === null && planetVelocityDraggedIndex === null) return;
   planetCanvas.releasePointerCapture?.(event.pointerId);
   planetDraggedIndex = null;
+  planetVelocityDraggedIndex = null;
   planetDragMoved = false;
   planetCanvas.classList.remove('is-dragging');
   if (planetWasRunningBeforeDrag) {
