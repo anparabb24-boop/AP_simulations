@@ -12,7 +12,7 @@ const planetGravity = 1.0;
 const planetRestitution = 0.97;
 const planetRadius = 15;
 const planetArrowLength = 0.25;
-const planetMaximumVelocity = 15;
+const planetMaximumVelocity = 5;
 const planetInitialState = [
   { x: 0.95, y: 0.95, vx: 0, vy: -0.5, mass: 1 },
   { x: 0.95, y: -0.95, vx: -0.5, vy: 0, mass: 1 },
