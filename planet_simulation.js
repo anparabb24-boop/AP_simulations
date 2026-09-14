@@ -11,6 +11,7 @@ const planetHoverInfo = document.getElementById('planetHoverInfo');
 const planetGravity = 1.0;
 const planetRestitution = 0.97;
 const planetRadius = 15;
+const planetMaximumVelocity = 100;
 const planetInitialState = [
   { x: 0.95, y: 0.95, vx: 0, vy: -0.5, mass: 1 },
   { x: 0.95, y: -0.95, vx: -0.5, vy: 0, mass: 1 },
@@ -251,28 +252,33 @@ function planetRender() {
 }
 
 function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
-  const endX = startX + body.vx * velocityScale;
-  const endY = startY - body.vy * velocityScale;
   const velocityMagnitude = Math.hypot(body.vx, body.vy);
   if (velocityMagnitude === 0) return;
 
-  const angle = Math.atan2(endY - startY, endX - startX);
+  const directionX = body.vx / velocityMagnitude;
+  const directionY = body.vy / velocityMagnitude;
+  const arrowEndX = startX + directionX * velocityScale;
+  const arrowEndY = startY - directionY * velocityScale;
+  const colorRatio = Math.min(velocityMagnitude / planetMaximumVelocity, 1);
+  const arrowColor = `hsl(${220 - colorRatio * 220}, 90%, 60%)`;
+
+  const angle = Math.atan2(arrowEndY - startY, arrowEndX - startX);
   const arrowHeadLength = 9;
   const arrowHeadAngle = Math.PI / 6;
   planetContext.beginPath();
   planetContext.moveTo(startX, startY);
-  planetContext.lineTo(endX, endY);
-  planetContext.moveTo(endX, endY);
+  planetContext.lineTo(arrowEndX, arrowEndY);
+  planetContext.moveTo(arrowEndX, arrowEndY);
   planetContext.lineTo(
-    endX - arrowHeadLength * Math.cos(angle - arrowHeadAngle),
-    endY - arrowHeadLength * Math.sin(angle - arrowHeadAngle)
+    arrowEndX - arrowHeadLength * Math.cos(angle - arrowHeadAngle),
+    arrowEndY - arrowHeadLength * Math.sin(angle - arrowHeadAngle)
   );
-  planetContext.moveTo(endX, endY);
+  planetContext.moveTo(arrowEndX, arrowEndY);
   planetContext.lineTo(
-    endX - arrowHeadLength * Math.cos(angle + arrowHeadAngle),
-    endY - arrowHeadLength * Math.sin(angle + arrowHeadAngle)
+    arrowEndX - arrowHeadLength * Math.cos(angle + arrowHeadAngle),
+    arrowEndY - arrowHeadLength * Math.sin(angle + arrowHeadAngle)
   );
-  planetContext.strokeStyle = '#ffdf73';
+  planetContext.strokeStyle = arrowColor;
   planetContext.lineWidth = 3;
   planetContext.lineCap = 'round';
   planetContext.stroke();
@@ -334,10 +340,12 @@ function planetFindVelocityArrowAtPointer(canvasX, canvasY) {
   const scale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2);
   const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
   const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
-  const endX = startX + body.vx * scale;
-  const endY = startY - body.vy * scale;
+  const velocityMagnitude = Math.hypot(body.vx, body.vy);
+  if (velocityMagnitude === 0) return false;
+  const endX = startX + body.vx / velocityMagnitude * scale;
+  const endY = startY - body.vy / velocityMagnitude * scale;
   const distanceFromBody = Math.hypot(canvasX - startX, canvasY - startY);
-  if (distanceFromBody <= planetRadius + 6 || Math.hypot(body.vx, body.vy) === 0) return false;
+  if (distanceFromBody <= planetRadius + 6) return false;
   return planetDistanceToSegment(canvasX, canvasY, startX, startY, endX, endY) <= 12;
 }
 
@@ -357,8 +365,17 @@ function planetMoveDraggedVelocity(event) {
   const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
   const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
   const velocityScale = Math.min(planetCanvas.width / 2, planetCanvas.height / 2);
-  body.vx = (pointer.canvasX - startX) / velocityScale;
-  body.vy = (startY - pointer.canvasY) / velocityScale;
+  const velocityX = pointer.canvasX - startX;
+  const velocityY = startY - pointer.canvasY;
+  const pointerDistance = Math.hypot(velocityX, velocityY);
+  const velocityMagnitude = Math.min(
+    planetMaximumVelocity,
+    pointerDistance / velocityScale * planetMaximumVelocity
+  );
+  if (pointerDistance > 0) {
+    body.vx = velocityX / pointerDistance * velocityMagnitude;
+    body.vy = velocityY / pointerDistance * velocityMagnitude;
+  }
   planetRender();
 }
 
