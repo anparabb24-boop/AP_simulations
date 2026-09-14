@@ -10,8 +10,10 @@ const planetHoverInfo = document.getElementById('planetHoverInfo');
 const planetAxisToggle = document.getElementById('planetAxisToggle');
 const planetDetailsSidebar = document.getElementById('planetDetailsSidebar');
 const planetDetailsTitle = document.getElementById('planetDetailsTitle');
-const planetDetailsPosition = document.getElementById('planetDetailsPosition');
-const planetDetailsVelocity = document.getElementById('planetDetailsVelocity');
+const planetDetailsX = document.getElementById('planetDetailsX');
+const planetDetailsY = document.getElementById('planetDetailsY');
+const planetDetailsVx = document.getElementById('planetDetailsVx');
+const planetDetailsVy = document.getElementById('planetDetailsVy');
 const planetDetailsSpeed = document.getElementById('planetDetailsSpeed');
 const planetDetailsMass = document.getElementById('planetDetailsMass');
 
@@ -63,10 +65,27 @@ function planetUpdateDetails() {
   const speed = Math.hypot(body.vx, body.vy);
   planetDetailsSidebar.hidden = false;
   planetDetailsTitle.textContent = `Mass ${planetSelectedIndex + 1}`;
-  planetDetailsPosition.textContent = planetFormatVector(body.x, body.y);
-  planetDetailsVelocity.textContent = planetFormatVector(body.vx, body.vy);
   planetDetailsSpeed.textContent = speed.toFixed(3);
-  planetDetailsMass.textContent = body.mass.toFixed(3);
+  planetUpdateDetailInput(planetDetailsX, body.x);
+  planetUpdateDetailInput(planetDetailsY, body.y);
+  planetUpdateDetailInput(planetDetailsVx, body.vx);
+  planetUpdateDetailInput(planetDetailsVy, body.vy);
+  planetUpdateDetailInput(planetDetailsMass, body.mass);
+}
+
+function planetUpdateDetailInput(input, value) {
+  if (input && document.activeElement !== input) input.value = value.toFixed(3);
+}
+
+function planetReadDetailInput(input, property, minimum, maximum) {
+  if (!input || planetSelectedIndex === null) return;
+  const parsedValue = Number.parseFloat(input.value);
+  if (!Number.isFinite(parsedValue)) return;
+  let value = Math.max(minimum, Math.min(maximum, parsedValue));
+  if (planetAxisEnabled() && property !== 'mass') value = planetSnapValue(value);
+  planetBodies[planetSelectedIndex][property] = value;
+  input.value = value.toFixed(3);
+  planetRender();
 }
 
 function planetReadInputs() {
@@ -606,6 +625,11 @@ planetCanvas?.addEventListener('pointerleave', () => {
   if (planetHoverInfo) planetHoverInfo.style.display = 'none';
   planetRender();
 });
+planetDetailsX?.addEventListener('change', () => planetReadDetailInput(planetDetailsX, 'x', -1, 1));
+planetDetailsY?.addEventListener('change', () => planetReadDetailInput(planetDetailsY, 'y', -1, 1));
+planetDetailsVx?.addEventListener('change', () => planetReadDetailInput(planetDetailsVx, 'vx', -planetMaximumVelocity, planetMaximumVelocity));
+planetDetailsVy?.addEventListener('change', () => planetReadDetailInput(planetDetailsVy, 'vy', -planetMaximumVelocity, planetMaximumVelocity));
+planetDetailsMass?.addEventListener('change', () => planetReadDetailInput(planetDetailsMass, 'mass', 0.001, Number.POSITIVE_INFINITY));
 window.addEventListener('resize', planetResize);
 planetAxisToggle?.addEventListener('change', planetRender);
 planetResize();

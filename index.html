@@ -104,11 +104,17 @@
           <dl>
             <div>
               <dt>Position</dt>
-              <dd id="planetDetailsPosition">(0.000, 0.000)</dd>
+              <dd class="planet-vector-inputs">
+                <label>x <input type="number" id="planetDetailsX" step="0.001" min="-1" max="1" /></label>
+                <label>y <input type="number" id="planetDetailsY" step="0.001" min="-1" max="1" /></label>
+              </dd>
             </div>
             <div>
               <dt>Velocity</dt>
-              <dd id="planetDetailsVelocity">(0.000, 0.000)</dd>
+              <dd class="planet-vector-inputs">
+                <label>vx <input type="number" id="planetDetailsVx" step="0.001" /></label>
+                <label>vy <input type="number" id="planetDetailsVy" step="0.001" /></label>
+              </dd>
             </div>
             <div>
               <dt>Speed</dt>
@@ -116,7 +122,7 @@
             </div>
             <div>
               <dt>Mass</dt>
-              <dd id="planetDetailsMass">1.000</dd>
+              <dd><input class="planet-detail-input" type="number" id="planetDetailsMass" step="0.001" min="0.001" /></dd>
             </div>
           </dl>
         </aside>
