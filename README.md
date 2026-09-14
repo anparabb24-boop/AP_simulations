@@ -1,6 +1,6 @@
 # AP Physics Simulations
 
-A browser-based, interactive workspace for physics simulations — built with vanilla JavaScript, HTML5 Canvas, and Three.js. Currently includes a **Double Pendulum** simulation and a **Delayed Electric Field** (retarded potential) visualizer.
+A browser-based, interactive workspace for physics simulations — built with vanilla JavaScript, HTML5 Canvas, and Three.js. It includes a **Double Pendulum**, **Delayed Electric Field**, and **Planetary Bodies** simulation.
 
 ## Overview
 
@@ -14,7 +14,8 @@ double pendulum/
 ├── style.css              # Styling for the workspace UI
 ├── app_router.js          # Handles switching between simulation views
 ├── double_pendulum.js     # Double pendulum physics + Canvas 2D rendering
-└── electric_field.js      # Delayed E-field physics + Three.js 3D rendering
+├── electric_field.js      # Delayed E-field physics + Three.js 3D rendering
+└── planet_simulation.js   # Browser port of the planet.cpp simulation
 ```
 
 ## Simulations
@@ -65,6 +66,18 @@ python3 -m http.server 8000
 Then visit `http://localhost:8000` in your browser.
 
 Use the **Double Pendulum** / **Delayed E-Field** buttons at the top to switch simulations.
+
+### 3. Planetary Bodies
+A browser port of `planet.cpp`, rendered with Canvas 2D.
+
+- Simulates five equal-mass bodies with pairwise gravity.
+- Uses fourth-order Runge-Kutta integration.
+- Includes boundary bouncing and elastic circle collisions.
+- Play, pause, and reset controls with a configurable maximum time.
+
+The original `planet.cpp` remains a native OpenGL/GLFW version. The deployed
+website uses `planet_simulation.js` because browsers cannot execute a native
+GLFW window directly.
 
 ## Notes & Limitations
 

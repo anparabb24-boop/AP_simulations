@@ -14,6 +14,7 @@
         <nav class="sim-nav">
           <button id="navPendulum" class="nav-btn active">Double Pendulum</button>
           <button id="navEField" class="nav-btn">Delayed E-Field</button>
+          <button id="navPlanet" class="nav-btn">Planetary Bodies</button>
         </nav>
       </div>
       <h1 id="simTitle">Double Pendulum</h1>
@@ -74,6 +75,34 @@
       </section>
     </div>
 
+    <!-- Planetary Bodies View -->
+    <div id="viewPlanet" class="sim-view" style="display: none;">
+      <section class="simulation-card">
+        <div class="canvas-wrap">
+          <canvas id="planetCanvas"></canvas>
+        </div>
+        <div class="controls">
+          <button id="planetPlayButton" class="button primary">▶ Play</button>
+          <button id="planetPauseButton" class="button">⏸ Pause</button>
+          <button id="planetResetButton" class="button">↻ Reset</button>
+          <div class="time">
+            <span>Simulation time</span>
+            <strong id="planetTimeDisplay">time = 0.0s</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <h2>Simulation parameters</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="planetTStop">Max Sim Time (s)</label>
+            <input type="number" id="planetTStop" value="50" step="1" min="1" />
+          </div>
+        </div>
+      </section>
+    </div>
+
     <!-- Three.js Core -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -129,6 +158,7 @@
 
   <script src="double_pendulum.js"></script>
   <script src="electric_field.js"></script>
+  <script src="planet_simulation.js"></script>
   <script src="app_router.js"></script>
 </body>
 </html>
