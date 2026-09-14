@@ -61,6 +61,61 @@ h1 {
   overflow: hidden;
 }
 
+.planet-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px;
+  align-items: start;
+}
+
+.planet-details {
+  min-height: 100%;
+  padding: 20px;
+  background: #1c2533;
+  border: 1px solid #2a3441;
+  border-radius: 12px;
+}
+
+.planet-details-kicker {
+  margin: 0 0 6px;
+  color: #7e9aaa;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.planet-details h2 {
+  margin: 0 0 22px;
+  color: #ffffff;
+  font-size: 1.35rem;
+}
+
+.planet-details dl {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+}
+
+.planet-details dl div {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a3441;
+}
+
+.planet-details dt {
+  margin-bottom: 5px;
+  color: #9ba3af;
+  font-size: 0.78rem;
+}
+
+.planet-details dd {
+  margin: 0;
+  color: #e8f7ff;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .canvas-wrap {
   position: relative;
   width: 100%;
@@ -232,6 +287,14 @@ h1 {
   .canvas-wrap {
     height: 75vw;
     min-height: 320px;
+  }
+
+  .planet-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .planet-details {
+    min-height: 0;
   }
 
   .controls {

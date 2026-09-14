@@ -8,6 +8,12 @@ const planetTStopInput = document.getElementById('planetTStop');
 const planetMassCountInput = document.getElementById('planetMassCount');
 const planetHoverInfo = document.getElementById('planetHoverInfo');
 const planetAxisToggle = document.getElementById('planetAxisToggle');
+const planetDetailsSidebar = document.getElementById('planetDetailsSidebar');
+const planetDetailsTitle = document.getElementById('planetDetailsTitle');
+const planetDetailsPosition = document.getElementById('planetDetailsPosition');
+const planetDetailsVelocity = document.getElementById('planetDetailsVelocity');
+const planetDetailsSpeed = document.getElementById('planetDetailsSpeed');
+const planetDetailsMass = document.getElementById('planetDetailsMass');
 
 const planetGravity = 1.0;
 const planetRestitution = 0.97;
@@ -44,6 +50,23 @@ function planetAxisEnabled() {
 
 function planetSnapValue(value, step = planetSnapStep) {
   return Math.round(value / step) * step;
+}
+
+function planetUpdateDetails() {
+  if (!planetDetailsSidebar) return;
+  const body = planetSelectedIndex === null ? null : planetBodies[planetSelectedIndex];
+  if (!body) {
+    planetDetailsSidebar.hidden = true;
+    return;
+  }
+
+  const speed = Math.hypot(body.vx, body.vy);
+  planetDetailsSidebar.hidden = false;
+  planetDetailsTitle.textContent = `Mass ${planetSelectedIndex + 1}`;
+  planetDetailsPosition.textContent = planetFormatVector(body.x, body.y);
+  planetDetailsVelocity.textContent = planetFormatVector(body.vx, body.vy);
+  planetDetailsSpeed.textContent = speed.toFixed(3);
+  planetDetailsMass.textContent = body.mass.toFixed(3);
 }
 
 function planetReadInputs() {
@@ -262,6 +285,7 @@ function planetRender() {
   if (planetTimeDisplay) {
     planetTimeDisplay.textContent = `time = ${planetTime.toFixed(1)}s`;
   }
+  planetUpdateDetails();
 }
 
 function planetRenderAxis(width, height, scaleX, scaleY) {
