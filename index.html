@@ -15,6 +15,7 @@
           <button id="navPendulum" class="nav-btn active">Double Pendulum</button>
           <button id="navEField" class="nav-btn">Delayed E-Field</button>
           <button id="navPlanet" class="nav-btn">Planetary Bodies</button>
+          <button id="navPlanet3D" class="nav-btn">3D Planet</button>
         </nav>
       </div>
       <h1 id="simTitle">Double Pendulum</h1>
@@ -73,6 +74,7 @@
           </div>
         </div>
       </section>
+
     </div>
 
     <!-- Planetary Bodies View -->
@@ -141,6 +143,7 @@
           </div>
         </div>
       </section>
+
     </div>
 
     <!-- Three.js Core -->
@@ -148,6 +151,85 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/FontUtils.js"></script>
+
+    <!-- 3D Planet View -->
+    <div id="viewPlanet3D" class="sim-view" style="display: none;">
+      <div class="planet3D-layout">
+        <section class="simulation-card">
+          <div class="canvas-wrap canvas-wrap-3d">
+            <canvas id="planet3DCanvas"></canvas>
+          </div>
+          <div class="controls">
+            <button id="planet3DPlayButton" class="button primary">▶ Play</button>
+            <button id="planet3DPauseButton" class="button">⏸ Pause</button>
+            <button id="planet3DResetButton" class="button">↻ Reset</button>
+            <div class="time">
+              <span>Simulation time</span>
+              <strong id="planet3DTimeDisplay">time = 0.0s</strong>
+            </div>
+          </div>
+        </section>
+
+        <section id="planet3DObjectDetails" class="info-card" hidden>
+        <h2 id="planet3DObjectTitle">Selected mass</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="planet3DObjectMass">Mass</label>
+            <input type="number" id="planet3DObjectMass" min="0.001" step="0.001" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectX">Position x</label>
+            <input type="number" id="planet3DObjectX" min="-6" max="6" step="0.01" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectY">Position y</label>
+            <input type="number" id="planet3DObjectY" min="-6" max="6" step="0.01" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectZ">Position z</label>
+            <input type="number" id="planet3DObjectZ" min="-6" max="6" step="0.01" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectVx">Velocity x</label>
+            <input type="number" id="planet3DObjectVx" step="0.01" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectVy">Velocity y</label>
+            <input type="number" id="planet3DObjectVy" step="0.01" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DObjectVz">Velocity z</label>
+            <input type="number" id="planet3DObjectVz" step="0.01" />
+          </div>
+        </div>
+        <div class="controls">
+          <label class="axis-toggle">
+            <input type="checkbox" id="planet3DTrajectoryToggle" />
+            <span>Trajectory</span>
+          </label>
+          <button id="planet3DSaveObjectButton" class="button primary" type="button">Save</button>
+        </div>
+        </section>
+      </div>
+
+      <section class="info-card">
+        <h2>Simulation parameters</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="planet3DMassCount">Number of masses</label>
+            <input type="number" id="planet3DMassCount" value="2" step="1" min="2" max="20" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DGravityScale">Gravity scale</label>
+            <input type="number" id="planet3DGravityScale" value="1.0" step="0.1" min="0" />
+          </div>
+          <div class="parameter">
+            <label for="planet3DMaxTime">Max simulation time (s)</label>
+            <input type="number" id="planet3DMaxTime" value="100" step="1" min="1" />
+          </div>
+        </div>
+      </section>
+    </div>
 
     <!-- Electric Field View -->
     <div id="viewEField" class="sim-view" style="display: none;">
@@ -199,6 +281,7 @@
   <script src="double_pendulum.js"></script>
   <script src="electric_field.js"></script>
   <script src="planet_simulation.js"></script>
+  <script src="planet3d.js"></script>
   <script src="app_router.js"></script>
 </body>
 </html>
