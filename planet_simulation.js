@@ -26,8 +26,12 @@ let planetRunning = false;
 let planetAnimationFrame = null;
 let planetPreviousTimestamp = 0;
 let planetHoveredIndex = null;
+let planetSelectedIndex = null;
 let planetDraggedIndex = null;
 let planetWasRunningBeforeDrag = false;
+let planetDragStartX = 0;
+let planetDragStartY = 0;
+let planetDragMoved = false;
 
 function planetReadInputs() {
   planetStopTime = Math.max(1, Number.parseFloat(planetTStopInput?.value) || 50);
@@ -59,6 +63,7 @@ function planetReset() {
   planetTime = 0;
   planetRunning = false;
   planetHoveredIndex = null;
+  planetSelectedIndex = null;
   if (planetAnimationFrame) cancelAnimationFrame(planetAnimationFrame);
   planetAnimationFrame = null;
   planetRender();
@@ -233,11 +238,43 @@ function planetRender() {
       planetContext.lineWidth = 2;
       planetContext.stroke();
     }
+
+    if (index === planetSelectedIndex) {
+      planetRenderVelocityArrow(body, x, y, Math.min(scaleX, scaleY));
+    }
   });
 
   if (planetTimeDisplay) {
     planetTimeDisplay.textContent = `time = ${planetTime.toFixed(1)}s`;
   }
+}
+
+function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
+  const endX = startX + body.vx * velocityScale;
+  const endY = startY - body.vy * velocityScale;
+  const velocityMagnitude = Math.hypot(body.vx, body.vy);
+  if (velocityMagnitude === 0) return;
+
+  const angle = Math.atan2(endY - startY, endX - startX);
+  const arrowHeadLength = 9;
+  const arrowHeadAngle = Math.PI / 6;
+  planetContext.beginPath();
+  planetContext.moveTo(startX, startY);
+  planetContext.lineTo(endX, endY);
+  planetContext.moveTo(endX, endY);
+  planetContext.lineTo(
+    endX - arrowHeadLength * Math.cos(angle - arrowHeadAngle),
+    endY - arrowHeadLength * Math.sin(angle - arrowHeadAngle)
+  );
+  planetContext.moveTo(endX, endY);
+  planetContext.lineTo(
+    endX - arrowHeadLength * Math.cos(angle + arrowHeadAngle),
+    endY - arrowHeadLength * Math.sin(angle + arrowHeadAngle)
+  );
+  planetContext.strokeStyle = '#ffdf73';
+  planetContext.lineWidth = 3;
+  planetContext.lineCap = 'round';
+  planetContext.stroke();
 }
 
 function planetFormatVector(x, y) {
@@ -282,14 +319,21 @@ function planetMoveDraggedBody(event) {
   const body = planetBodies[planetDraggedIndex];
   body.x = Math.max(-1, Math.min(1, pointer.x));
   body.y = Math.max(-1, Math.min(1, pointer.y));
-  body.vx = 0;
-  body.vy = 0;
   planetRender();
 }
 
 function planetHandlePointerMove(event) {
   if (!planetCanvas || !planetHoverInfo) return;
   if (planetDraggedIndex !== null) {
+    if (!planetDragMoved && Math.hypot(
+      event.clientX - planetDragStartX,
+      event.clientY - planetDragStartY
+    ) < 3) return;
+    if (!planetDragMoved) {
+      planetDragMoved = true;
+      planetBodies[planetDraggedIndex].vx = 0;
+      planetBodies[planetDraggedIndex].vy = 0;
+    }
     planetMoveDraggedBody(event);
     return;
   }
@@ -326,9 +370,17 @@ function planetHandlePointerDown(event) {
   if (!planetCanvas) return;
   const pointer = planetPointerPosition(event);
   const bodyIndex = planetFindBodyAtPointer(pointer.canvasX, pointer.canvasY);
-  if (bodyIndex === null) return;
+  if (bodyIndex === null) {
+    planetSelectedIndex = null;
+    planetRender();
+    return;
+  }
 
+  planetSelectedIndex = bodyIndex;
   planetDraggedIndex = bodyIndex;
+  planetDragStartX = event.clientX;
+  planetDragStartY = event.clientY;
+  planetDragMoved = false;
   planetHoveredIndex = bodyIndex;
   planetWasRunningBeforeDrag = planetRunning;
   planetRunning = false;
@@ -336,14 +388,15 @@ function planetHandlePointerDown(event) {
   planetAnimationFrame = null;
   planetCanvas.setPointerCapture?.(event.pointerId);
   planetCanvas.classList.add('is-dragging');
-  planetMoveDraggedBody(event);
   if (planetHoverInfo) planetHoverInfo.style.display = 'none';
+  planetRender();
 }
 
 function planetHandlePointerUp(event) {
   if (planetDraggedIndex === null) return;
   planetCanvas.releasePointerCapture?.(event.pointerId);
   planetDraggedIndex = null;
+  planetDragMoved = false;
   planetCanvas.classList.remove('is-dragging');
   if (planetWasRunningBeforeDrag) {
     planetRunning = true;
