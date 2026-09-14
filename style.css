@@ -78,6 +78,12 @@ h1 {
 
 #planetCanvas {
   background: #05080d;
+  cursor: grab;
+  touch-action: none;
+}
+
+#planetCanvas.is-dragging {
+  cursor: grabbing;
 }
 
 .planet-hover-info {

@@ -26,6 +26,8 @@ let planetRunning = false;
 let planetAnimationFrame = null;
 let planetPreviousTimestamp = 0;
 let planetHoveredIndex = null;
+let planetDraggedIndex = null;
+let planetWasRunningBeforeDrag = false;
 
 function planetReadInputs() {
   planetStopTime = Math.max(1, Number.parseFloat(planetTStopInput?.value) || 50);
@@ -242,25 +244,59 @@ function planetFormatVector(x, y) {
   return `(${x.toFixed(3)}, ${y.toFixed(3)})`;
 }
 
-function planetHandlePointerMove(event) {
-  if (!planetCanvas || !planetHoverInfo) return;
+function planetPointerPosition(event) {
   const rect = planetCanvas.getBoundingClientRect();
+  const canvasX = (event.clientX - rect.left) * (planetCanvas.width / rect.width);
+  const canvasY = (event.clientY - rect.top) * (planetCanvas.height / rect.height);
+  return {
+    rect,
+    canvasX,
+    canvasY,
+    x: (canvasX - planetCanvas.width / 2) / (planetCanvas.width / 2),
+    y: (planetCanvas.height / 2 - canvasY) / (planetCanvas.height / 2)
+  };
+}
+
+function planetFindBodyAtPointer(canvasX, canvasY) {
   const scaleX = planetCanvas.width / 2;
   const scaleY = planetCanvas.height / 2;
-  const pointerX = (event.clientX - rect.left) * (planetCanvas.width / rect.width);
-  const pointerY = (event.clientY - rect.top) * (planetCanvas.height / rect.height);
   let closestIndex = null;
   let closestDistance = Infinity;
 
   planetBodies.forEach((body, index) => {
     const bodyX = planetCanvas.width / 2 + body.x * scaleX;
     const bodyY = planetCanvas.height / 2 - body.y * scaleY;
-    const distance = Math.hypot(pointerX - bodyX, pointerY - bodyY);
+    const distance = Math.hypot(canvasX - bodyX, canvasY - bodyY);
     if (distance <= 24 && distance < closestDistance) {
       closestIndex = index;
       closestDistance = distance;
     }
   });
+
+  return closestIndex;
+}
+
+function planetMoveDraggedBody(event) {
+  if (planetDraggedIndex === null) return;
+  const pointer = planetPointerPosition(event);
+  const body = planetBodies[planetDraggedIndex];
+  body.x = Math.max(-1, Math.min(1, pointer.x));
+  body.y = Math.max(-1, Math.min(1, pointer.y));
+  body.vx = 0;
+  body.vy = 0;
+  planetRender();
+}
+
+function planetHandlePointerMove(event) {
+  if (!planetCanvas || !planetHoverInfo) return;
+  if (planetDraggedIndex !== null) {
+    planetMoveDraggedBody(event);
+    return;
+  }
+
+  const pointer = planetPointerPosition(event);
+  const { rect } = pointer;
+  const closestIndex = planetFindBodyAtPointer(pointer.canvasX, pointer.canvasY);
 
   planetHoveredIndex = closestIndex;
   if (closestIndex === null) {
@@ -283,6 +319,38 @@ function planetHandlePointerMove(event) {
   planetHoverInfo.style.left = `${left}px`;
   planetHoverInfo.style.top = `${top}px`;
   planetHoverInfo.style.display = 'block';
+  planetRender();
+}
+
+function planetHandlePointerDown(event) {
+  if (!planetCanvas) return;
+  const pointer = planetPointerPosition(event);
+  const bodyIndex = planetFindBodyAtPointer(pointer.canvasX, pointer.canvasY);
+  if (bodyIndex === null) return;
+
+  planetDraggedIndex = bodyIndex;
+  planetHoveredIndex = bodyIndex;
+  planetWasRunningBeforeDrag = planetRunning;
+  planetRunning = false;
+  if (planetAnimationFrame) cancelAnimationFrame(planetAnimationFrame);
+  planetAnimationFrame = null;
+  planetCanvas.setPointerCapture?.(event.pointerId);
+  planetCanvas.classList.add('is-dragging');
+  planetMoveDraggedBody(event);
+  if (planetHoverInfo) planetHoverInfo.style.display = 'none';
+}
+
+function planetHandlePointerUp(event) {
+  if (planetDraggedIndex === null) return;
+  planetCanvas.releasePointerCapture?.(event.pointerId);
+  planetDraggedIndex = null;
+  planetCanvas.classList.remove('is-dragging');
+  if (planetWasRunningBeforeDrag) {
+    planetRunning = true;
+    planetPreviousTimestamp = performance.now();
+    planetAnimationFrame = requestAnimationFrame(planetAnimate);
+  }
+  planetWasRunningBeforeDrag = false;
   planetRender();
 }
 
@@ -329,8 +397,12 @@ planetPauseButton?.addEventListener('click', () => {
 planetResetButton?.addEventListener('click', planetReset);
 planetTStopInput?.addEventListener('change', planetReset);
 planetMassCountInput?.addEventListener('change', planetReset);
-planetCanvas?.addEventListener('mousemove', planetHandlePointerMove);
-planetCanvas?.addEventListener('mouseleave', () => {
+planetCanvas?.addEventListener('pointerdown', planetHandlePointerDown);
+planetCanvas?.addEventListener('pointermove', planetHandlePointerMove);
+planetCanvas?.addEventListener('pointerup', planetHandlePointerUp);
+planetCanvas?.addEventListener('pointercancel', planetHandlePointerUp);
+planetCanvas?.addEventListener('pointerleave', () => {
+  if (planetDraggedIndex !== null) return;
   planetHoveredIndex = null;
   if (planetHoverInfo) planetHoverInfo.style.display = 'none';
   planetRender();
