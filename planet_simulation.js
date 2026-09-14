@@ -254,10 +254,8 @@ function planetRender() {
 
 function planetRenderVelocityArrow(body, startX, startY, velocityScale) {
   const velocityMagnitude = Math.hypot(body.vx, body.vy);
-  if (velocityMagnitude === 0) return;
-
-  const directionX = body.vx / velocityMagnitude;
-  const directionY = body.vy / velocityMagnitude;
+  const directionX = velocityMagnitude === 0 ? 1 : body.vx / velocityMagnitude;
+  const directionY = velocityMagnitude === 0 ? 0 : body.vy / velocityMagnitude;
   const arrowEndX = startX + directionX * velocityScale;
   const arrowEndY = startY - directionY * velocityScale;
   const colorRatio = Math.min(velocityMagnitude / planetMaximumVelocity, 1);
@@ -342,9 +340,10 @@ function planetFindVelocityArrowAtPointer(canvasX, canvasY) {
   const startX = planetCanvas.width / 2 + body.x * planetCanvas.width / 2;
   const startY = planetCanvas.height / 2 - body.y * planetCanvas.height / 2;
   const velocityMagnitude = Math.hypot(body.vx, body.vy);
-  if (velocityMagnitude === 0) return false;
-  const endX = startX + body.vx / velocityMagnitude * scale;
-  const endY = startY - body.vy / velocityMagnitude * scale;
+  const directionX = velocityMagnitude === 0 ? 1 : body.vx / velocityMagnitude;
+  const directionY = velocityMagnitude === 0 ? 0 : body.vy / velocityMagnitude;
+  const endX = startX + directionX * scale;
+  const endY = startY - directionY * scale;
   const distanceFromBody = Math.hypot(canvasX - startX, canvasY - startY);
   if (distanceFromBody <= planetRadius + 6) return false;
   return planetDistanceToSegment(canvasX, canvasY, startX, startY, endX, endY) <= 12;
