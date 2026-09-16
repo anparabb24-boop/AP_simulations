@@ -3,6 +3,7 @@ const planetContext = planetCanvas ? planetCanvas.getContext('2d') : null;
 const planetPlayButton = document.getElementById('planetPlayButton');
 const planetPauseButton = document.getElementById('planetPauseButton');
 const planetResetButton = document.getElementById('planetResetButton');
+const planetDownloadCsvButton = document.getElementById('planetDownloadCsvButton');
 const planetTimeDisplay = document.getElementById('planetTimeDisplay');
 const planetTStopInput = document.getElementById('planetTStop');
 const planetMassCountInput = document.getElementById('planetMassCount');
@@ -32,6 +33,7 @@ const planetInitialState = [
 ];
 
 let planetBodies = [];
+let planetTimeSeries = [];
 let planetTime = 0;
 let planetStopTime = 50;
 let planetRunning = false;
@@ -116,6 +118,8 @@ function planetReset() {
   if (planetMassCountInput) planetMassCountInput.value = requestedCount;
   planetBodies = planetCreateInitialBodies(requestedCount);
   planetTime = 0;
+  planetTimeSeries = [];
+  planetRecordTimeSeriesPoint();
   planetRunning = false;
   planetHoveredIndex = null;
   planetSelectedIndex = null;
@@ -262,6 +266,37 @@ function planetStep(dt) {
     }
   }
   planetTime += dt;
+  planetRecordTimeSeriesPoint();
+}
+
+function planetRecordTimeSeriesPoint() {
+  planetTimeSeries.push({
+    time: planetTime,
+    bodies: planetBodies.map(({ x, y }) => ({ x, y }))
+  });
+}
+
+function planetDownloadCsv() {
+  if (planetTimeSeries.length === 0) return;
+
+  const bodyCount = planetTimeSeries[0].bodies.length;
+  const header = [
+    'time_s',
+    ...Array.from({ length: bodyCount }, (_, index) => [`object_${index + 1}_x`, `object_${index + 1}_y`]).flat()
+  ];
+  const rows = planetTimeSeries.map((point) => [
+    point.time,
+    ...point.bodies.flatMap((body) => [body.x, body.y])
+  ].join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'planet-simulation-timeseries.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function planetRender() {
@@ -613,6 +648,7 @@ planetPauseButton?.addEventListener('click', () => {
 });
 
 planetResetButton?.addEventListener('click', planetReset);
+planetDownloadCsvButton?.addEventListener('click', planetDownloadCsv);
 planetTStopInput?.addEventListener('change', planetReset);
 planetMassCountInput?.addEventListener('change', planetReset);
 planetCanvas?.addEventListener('pointerdown', planetHandlePointerDown);

@@ -35,6 +35,7 @@
           <button id="playButton" class="button primary">▶ Play</button>
           <button id="pauseButton" class="button">⏸ Pause</button>
           <button id="resetButton" class="button">↻ Reset</button>
+          <button id="downloadCsvButton" class="button">⇩ Download CSV</button>
           <div class="time">
             <span>Simulation time</span>
             <strong id="timeDisplay">time = 0.0s</strong>
@@ -73,6 +74,10 @@
             <label for="inputTStop">Max Sim Time (s)</label>
             <input type="number" id="inputTStop" value="10" step="1" min="1" />
           </div>
+          <div class="parameter">
+            <label for="inputCsvSampleRate">CSV sample rate (Hz)</label>
+            <input type="number" id="inputCsvSampleRate" value="100" step="0.1" min="0.1" />
+          </div>
         </div>
       </section>
 
@@ -90,6 +95,7 @@
             <button id="planetPlayButton" class="button primary">▶ Play</button>
             <button id="planetPauseButton" class="button">⏸ Pause</button>
             <button id="planetResetButton" class="button">↻ Reset</button>
+            <button id="planetDownloadCsvButton" class="button">⇩ Download CSV</button>
             <label class="axis-toggle">
               <input type="checkbox" id="planetAxisToggle" />
               <span>Axis &amp; snap</span>
@@ -163,6 +169,7 @@
           <button id="lorenzPlayButton" class="button primary">▶ Play</button>
           <button id="lorenzPauseButton" class="button">⏸ Pause</button>
           <button id="lorenzResetButton" class="button">↻ Reset</button>
+          <button id="lorenzDownloadCsvButton" class="button">⇩ Download CSV</button>
           <label class="speed-control" for="lorenzSpeed">
             <span>Speed</span>
             <select id="lorenzSpeed">
@@ -226,6 +233,7 @@
             <button id="planet3DPlayButton" class="button primary">▶ Play</button>
             <button id="planet3DPauseButton" class="button">⏸ Pause</button>
             <button id="planet3DResetButton" class="button">↻ Reset</button>
+            <button id="planet3DDownloadCsvButton" class="button">⇩ Download CSV</button>
             <div class="time">
               <span>Simulation time</span>
               <strong id="planet3DTimeDisplay">time = 0.0s</strong>

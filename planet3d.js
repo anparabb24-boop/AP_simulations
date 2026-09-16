@@ -2,6 +2,7 @@ const planet3DCanvas = document.getElementById('planet3DCanvas');
 const planet3DPlayButton = document.getElementById('planet3DPlayButton');
 const planet3DPauseButton = document.getElementById('planet3DPauseButton');
 const planet3DResetButton = document.getElementById('planet3DResetButton');
+const planet3DDownloadCsvButton = document.getElementById('planet3DDownloadCsvButton');
 const planet3DTimeDisplay = document.getElementById('planet3DTimeDisplay');
 const planet3DMassCountInput = document.getElementById('planet3DMassCount');
 const planet3DGravityScaleInput = document.getElementById('planet3DGravityScale');
@@ -38,6 +39,7 @@ let planet3DPreviousTimestamp = 0;
 let planet3DAnimationFrame = null;
 let planet3DOrbitControls = null;
 let planet3DPhysicsBodies = [];
+let planet3DTimeSeries = [];
 let planet3DBaseBodyStructures = [];
 let planet3DSelectedIndex = null;
 let planet3DTrajectoryLine = null;
@@ -478,6 +480,39 @@ function planet3DUpdateBodies(dt) {
   planet3DRefreshGrid();
 }
 
+function planet3DRecordTimeSeriesPoint() {
+  planet3DTimeSeries.push({
+    time: planet3DTime,
+    bodies: planet3DPhysicsBodies.map((body) => ({ ...body.position }))
+  });
+}
+
+function planet3DDownloadCsv() {
+  if (planet3DTimeSeries.length === 0) return;
+
+  const bodyCount = planet3DTimeSeries[0].bodies.length;
+  const header = [
+    'time_s',
+    ...Array.from(
+      { length: bodyCount },
+      (_, index) => [`mass_${index + 1}_x`, `mass_${index + 1}_y`, `mass_${index + 1}_z`]
+    ).flat()
+  ];
+  const rows = planet3DTimeSeries.map((point) => [
+    point.time,
+    ...point.bodies.flatMap((body) => [body.x, body.y, body.z])
+  ].join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'planet-3d-timeseries.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function planet3DInitScene() {
   if (!planet3DCanvas) return;
 
@@ -521,6 +556,8 @@ function planet3DInitScene() {
   planet3DScene.add(planet3DGroup);
 
   planet3DPhysicsBodies = planet3DCreateBodyState();
+  planet3DTimeSeries = [];
+  planet3DRecordTimeSeriesPoint();
 
   for (const [index, body] of planet3DPhysicsBodies.entries()) {
     const mesh = planet3DMakeSphereMesh(1, body.color);
@@ -560,6 +597,8 @@ function planet3DReset() {
   if (planet3DAnimationFrame) cancelAnimationFrame(planet3DAnimationFrame);
   planet3DAnimationFrame = null;
   planet3DPhysicsBodies = planet3DCreateBodyState();
+  planet3DTimeSeries = [];
+  planet3DRecordTimeSeriesPoint();
 
   if (planet3DGroup) {
     while (planet3DGroup.children.length) {
@@ -597,6 +636,7 @@ function planet3DAnimate(timestamp) {
 
   planet3DUpdateBodies(elapsed);
   planet3DTime += elapsed;
+  planet3DRecordTimeSeriesPoint();
 
   if (planet3DTimeDisplay) {
     planet3DTimeDisplay.textContent = `time = ${planet3DTime.toFixed(1)}s`;
@@ -631,6 +671,7 @@ planet3DPauseButton?.addEventListener('click', () => {
 });
 
 planet3DResetButton?.addEventListener('click', planet3DReset);
+planet3DDownloadCsvButton?.addEventListener('click', planet3DDownloadCsv);
 planet3DMassCountInput?.addEventListener('change', planet3DReset);
 planet3DGravityScaleInput?.addEventListener('change', planet3DReset);
 planet3DMaxTimeInput?.addEventListener('change', planet3DReset);

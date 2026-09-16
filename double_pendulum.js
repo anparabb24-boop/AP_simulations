@@ -5,6 +5,7 @@ const ctx = canvas.getContext('2d');
 const playButton = document.getElementById('playButton');
 const pauseButton = document.getElementById('pauseButton');
 const resetButton = document.getElementById('resetButton');
+const downloadCsvButton = document.getElementById('downloadCsvButton');
 const timeDisplay = document.getElementById('timeDisplay');
 
 // Parameter inputs
@@ -15,14 +16,17 @@ const inputTh2 = document.getElementById('inputTh2');
 const inputM1 = document.getElementById('inputM1');
 const inputM2 = document.getElementById('inputM2');
 const inputTStop = document.getElementById('inputTStop');
+const inputCsvSampleRate = document.getElementById('inputCsvSampleRate');
 
 const G = 9.8;
 const dt = 0.01;
 
 // Simulation variables
-let L1, L2, M1, M2, tStop;
+let L1, L2, M1, M2, tStop, csvSampleRate;
 let state = [0, 0, 0, 0];
 let traceHistory = [];
+let timeSeriesData = [];
+let nextCsvSampleTime = 0.0;
 let simTime = 0.0;
 let isRunning = false;
 let animationFrameId = null;
@@ -33,6 +37,7 @@ function readInputs() {
   M1 = parseFloat(inputM1.value) || 5.0;
   M2 = parseFloat(inputM2.value) || 5.0;
   tStop = parseFloat(inputTStop.value) || 10.0;
+  csvSampleRate = Math.max(parseFloat(inputCsvSampleRate.value) || 100, 0.1);
 }
 
 function resetSimulation() {
@@ -50,6 +55,9 @@ function resetSimulation() {
   state = [th1Rad, 0, th2Rad, 0];
   traceHistory = [];
   simTime = 0.0;
+  timeSeriesData = [];
+  recordTimeSeriesPoint();
+  nextCsvSampleTime = 1 / csvSampleRate;
   timeDisplay.textContent = 'time = 0.0s';
 
   renderFrame();
@@ -89,6 +97,63 @@ function stepPhysics() {
     state[j] += dState[j] * dt;
   }
   simTime += dt;
+  if (simTime + Number.EPSILON >= nextCsvSampleTime) {
+    recordTimeSeriesPoint();
+    const samplePeriod = 1 / csvSampleRate;
+    do {
+      nextCsvSampleTime += samplePeriod;
+    } while (nextCsvSampleTime <= simTime + Number.EPSILON);
+  }
+}
+
+function getPendulumCoordinates() {
+  const x1 = L1 * Math.sin(state[0]);
+  const y1 = -L1 * Math.cos(state[0]);
+  return {
+    x1,
+    y1,
+    x2: x1 + L2 * Math.sin(state[2]),
+    y2: y1 - L2 * Math.cos(state[2]),
+  };
+}
+
+function recordTimeSeriesPoint() {
+  const { x1, y1, x2, y2 } = getPendulumCoordinates();
+  timeSeriesData.push({
+    time: simTime,
+    x1,
+    y1,
+    x2,
+    y2,
+    theta1: state[0],
+    theta2: state[2],
+  });
+}
+
+function downloadTimeSeriesCsv() {
+  if (timeSeriesData.length === 0) return;
+
+  const header = 'time_s,x1_m,y1_m,x2_m,y2_m,theta1_rad,theta2_rad';
+  const rows = timeSeriesData.map((point) =>
+    [
+      point.time,
+      point.x1,
+      point.y1,
+      point.x2,
+      point.y2,
+      point.theta1,
+      point.theta2,
+    ].join(',')
+  );
+  const csv = [header, ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'double-pendulum-timeseries.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderFrame() {
@@ -99,10 +164,7 @@ function renderFrame() {
   const totalL = (L1 || 1.0) + (L2 || 1.0);
   const scale = Math.min(canvas.width, canvas.height) / (2 * totalL + 1.0);
 
-  const x1 = L1 * Math.sin(state[0]);
-  const y1 = -L1 * Math.cos(state[0]);
-  const x2 = L2 * Math.sin(state[2]) + x1;
-  const y2 = -L2 * Math.cos(state[2]) + y1;
+  const { x1, y1, x2, y2 } = getPendulumCoordinates();
 
   const px1 = originX + x1 * scale;
   const py1 = originY - y1 * scale;
@@ -191,8 +253,9 @@ pauseButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', resetSimulation);
+downloadCsvButton.addEventListener('click', downloadTimeSeriesCsv);
 
-[inputL1, inputL2, inputTh1, inputTh2, inputM1, inputM2, inputTStop].forEach((input) => {
+[inputL1, inputL2, inputTh1, inputTh2, inputM1, inputM2, inputTStop, inputCsvSampleRate].forEach((input) => {
   input.addEventListener('change', resetSimulation);
 });
 

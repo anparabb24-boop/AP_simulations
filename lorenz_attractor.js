@@ -2,6 +2,7 @@ const lorenzContainer = document.getElementById('lorenzCanvas');
 const lorenzPlayButton = document.getElementById('lorenzPlayButton');
 const lorenzPauseButton = document.getElementById('lorenzPauseButton');
 const lorenzResetButton = document.getElementById('lorenzResetButton');
+const lorenzDownloadCsvButton = document.getElementById('lorenzDownloadCsvButton');
 const lorenzSpeedInput = document.getElementById('lorenzSpeed');
 const lorenzTimeDisplay = document.getElementById('lorenzTimeDisplay');
 const lorenzSigmaInput = document.getElementById('lorenzSigma');
@@ -22,6 +23,7 @@ let lorenzControls;
 let lorenzLine;
 let lorenzMarker;
 let lorenzTrajectory = [];
+let lorenzTimeSeries = [];
 let lorenzDisplayedPoints = [];
 let lorenzCurrentIndex = 0;
 let lorenzTime = 0;
@@ -68,13 +70,36 @@ function lorenzBuildTrajectory() {
   let state = [...lorenzInitialState];
   const points = [];
   const steps = Math.floor(parameters.endTime / parameters.dt);
+  lorenzTimeSeries = [];
 
   for (let index = 0; index < steps; index += 1) {
+    lorenzTimeSeries.push({
+      time: index * parameters.dt,
+      x: state[0],
+      y: state[1],
+      z: state[2]
+    });
     points.push(new THREE.Vector3(state[0], state[2], state[1]));
     state = lorenzRK4Step(state, parameters);
   }
 
   return points;
+}
+
+function lorenzDownloadCsv() {
+  if (lorenzTimeSeries.length === 0) return;
+
+  const header = 'time_s,x,y,z';
+  const rows = lorenzTimeSeries.map((point) => [point.time, point.x, point.y, point.z].join(','));
+  const csv = [header, ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'lorenz-attractor-timeseries.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function lorenzUpdateTrajectory() {
@@ -219,6 +244,7 @@ lorenzPauseButton?.addEventListener('click', () => {
   lorenzPlaybackAccumulator = 0;
 });
 lorenzResetButton?.addEventListener('click', lorenzReset);
+lorenzDownloadCsvButton?.addEventListener('click', lorenzDownloadCsv);
 [
   [lorenzSigmaInput, lorenzSigmaSlider],
   [lorenzRhoInput, lorenzRhoSlider],
