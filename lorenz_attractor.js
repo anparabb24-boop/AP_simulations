@@ -223,7 +223,7 @@ function lorenzInit() {
   lorenzScene.add(new THREE.GridHelper(100, 10, 0x456773, 0x263b43));
   lorenzLine = new THREE.Line(
     new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x66e3d3, linewidth: 20 })
+    new THREE.LineBasicMaterial({ color: 0x66e3d3, linewidth: 4 })
   );
   lorenzScene.add(lorenzLine);
   lorenzMarker = new THREE.Mesh(
