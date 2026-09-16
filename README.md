@@ -1,86 +1,82 @@
 # AP Physics Simulations
 
-A browser-based, interactive workspace for physics simulations — built with vanilla JavaScript, HTML5 Canvas, and Three.js. It includes a **Double Pendulum**, **Delayed Electric Field**, and **Planetary Bodies** simulation.
-
-## Overview
-
-This is a lightweight single-page web app that lets you switch between different physics simulations from a shared navigation bar, each with live-adjustable parameters and play/pause/reset controls — no build step or server required.
-
-## Repository Contents
-
-```
-double pendulum/
-├── index.html            # Main page — layout, controls, and simulation switcher
-├── style.css              # Styling for the workspace UI
-├── app_router.js          # Handles switching between simulation views
-├── double_pendulum.js     # Double pendulum physics + Canvas 2D rendering
-├── electric_field.js      # Delayed E-field physics + Three.js 3D rendering
-└── planet_simulation.js   # Browser port of the planet.cpp simulation
-```
+An interactive, browser-based collection of AP Physics-inspired simulations. The app is a single-page site built with vanilla JavaScript, HTML5 Canvas, and Three.js; it has no build step or package installation requirement.
 
 ## Simulations
 
-### 1. Double Pendulum
-A classic chaotic double pendulum, simulated on a 2D HTML5 Canvas.
+### Double Pendulum
 
-- Numerically integrates the coupled equations of motion for two connected pendulum arms under gravity.
-- Adjustable in real time:
-  - Rod lengths (`L1`, `L2`)
-  - Initial angles (`θ1`, `θ2`)
-  - Bob masses (`M1`, `M2`)
-  - Max simulation duration
-- Displays a live trace of the second bob's trajectory and a running simulation clock.
-- Play, pause, and reset controls.
+A 2D chaotic double-pendulum model with adjustable rod lengths, initial angles, bob masses, and maximum duration. It draws the second bob's trail and uses a fixed `0.01 s` physics timestep.
 
-### 2. Delayed Electric Field
-A 3D visualization of the electric field from a moving point charge, accounting for field propagation delay (retarded potentials), rendered with **Three.js**.
+The CSV export includes the initial state and sampled simulation data:
 
-- Define the charge's motion as arbitrary functions of time — `x(t)`, `y(t)`, `z(t)` — entered directly as JavaScript expressions (e.g. `5 * Math.sin(0.05 * t)`).
-- Configurable charge magnitude (`q`).
-- Choose which coordinate plane (XY, YZ, or XZ) the field grid is drawn on.
-- Play, pause, and reset controls with a live time readout.
+`time_s, x1_m, y1_m, x2_m, y2_m, theta1_rad, theta2_rad`
 
-## Tech Stack
+The CSV sample rate is user-configurable in Hz, up to the 100 Hz physics-update limit.
 
-- **HTML5 Canvas 2D** — double pendulum rendering
-- **[Three.js](https://threejs.org/) (r128)** — 3D rendering for the electric field simulation, loaded via CDN (cdnjs + jsDelivr)
-- **Vanilla JavaScript** — no framework, no build tools, no dependencies to install
+### Planetary Bodies (2D)
 
-## Usage
+A configurable two-dimensional many-body gravity simulation. It uses fourth-order Runge–Kutta integration, boundary bouncing, and elastic circle collisions. Users can choose 2–20 masses, set the maximum time, select an object, and edit its position, velocity, and mass.
 
-No installation needed. Just open the page in a browser:
+Its CSV export records the initial scene and every animation update. The headers adapt to the number of bodies, for example:
+
+`time_s, object_1_x, object_1_y, object_2_x, object_2_y, ...`
+
+### Lorenz Attractor
+
+A Three.js 3D visualization of the Lorenz chaotic system. Sigma, rho, beta, duration, and integration timestep are adjustable; the trajectory is computed with a fourth-order Runge–Kutta solver and can be viewed at different playback speeds.
+
+The CSV export contains:
+
+`time_s, x, y, z`
+
+It produces one row for each configured integration timestep (`dt`).
+
+### 3D Planet Simulation
+
+A Three.js browser implementation of a three-dimensional gravity model. It supports 2–20 masses, configurable gravity strength and duration, object selection/editing, collision and boundary handling, and an optional projected trajectory for the selected mass.
+
+The CSV export records the initial scene and every animation update. Its columns adapt to the active mass count:
+
+`time_s, mass_1_x, mass_1_y, mass_1_z, mass_2_x, mass_2_y, mass_2_z, ...`
+
+### Delayed Electric Field
+
+A Three.js visualization of the electric field from a moving point charge, including propagation delay (retarded potentials). Enter the charge trajectory as JavaScript expressions for `x(t)`, `y(t)`, and `z(t)`, choose the charge magnitude and grid plane, then animate the result.
+
+## Run locally
+
+Open `index.html` in a modern browser, or serve the directory locally:
 
 ```bash
-cd "double pendulum"
-open index.html      # macOS
-# or just double-click index.html in Finder/Explorer
-```
-
-Alternatively, serve it locally (recommended, since some browsers restrict local file access for scripts):
-
-```bash
-cd "double pendulum"
 python3 -m http.server 8000
 ```
 
-Then visit `http://localhost:8000` in your browser.
+Then visit [http://localhost:8000](http://localhost:8000). Use the navigation buttons to switch among simulations.
 
-Use the **Double Pendulum** / **Delayed E-Field** buttons at the top to switch simulations.
+## Repository layout
 
-### 3. Planetary Bodies
-A browser port of `planet.cpp`, rendered with Canvas 2D.
+| File | Purpose |
+| --- | --- |
+| `index.html` | Application layout, navigation, controls, and script loading |
+| `style.css` | Shared application and simulation styling |
+| `app_router.js` | Navigation between simulation views |
+| `double_pendulum.js` | Double-pendulum physics, rendering, and CSV export |
+| `planet_simulation.js` | 2D many-body gravity simulation and CSV export |
+| `lorenz_attractor.js` | Lorenz attractor solver, renderer, and CSV export |
+| `planet3d.js` | 3D gravity simulation, renderer, and CSV export |
+| `electric_field.js` | Delayed electric-field visualization |
+| `planet.cpp` | Native C++/OpenGL source related to the 2D planetary model |
+| `planet3d.cpp` | Native C++/OpenGL source related to the 3D planetary model |
 
-- Simulates five equal-mass bodies with pairwise gravity.
-- Uses fourth-order Runge-Kutta integration.
-- Includes boundary bouncing and elastic circle collisions.
-- Play, pause, and reset controls with a configurable maximum time.
+## Technology
 
-The original `planet.cpp` remains a native OpenGL/GLFW version. The deployed
-website uses `planet_simulation.js` because browsers cannot execute a native
-GLFW window directly.
+- Vanilla JavaScript
+- HTML5 Canvas 2D
+- [Three.js r128](https://threejs.org/), loaded from CDNs for 3D scenes
+- No framework, bundler, or installed runtime dependencies
 
-## Notes & Limitations
+## Notes
 
-- The `electric_field.js` motion functions (`x(t)`, `y(t)`, `z(t)`) are evaluated via `new Function(...)` from raw text input — fine for local personal use, but not something you'd want to expose to untrusted input if this is ever deployed publicly.
-- Simulation constants (Coulomb's constant, propagation speed `c`, visual scaling factors) are currently hardcoded in `electric_field.js` rather than exposed as UI controls.
-- This folder currently lives inside a general `AP_simulations` repo — if more simulations are added later, consider giving each its own subfolder with a similar structure.
+- CSV files are generated in the browser and download locally; no simulation data is sent to a server.
+- The electric-field trajectory expressions are evaluated from text input. They are suitable for local educational use, but should not be exposed to untrusted users without a safer expression parser.
