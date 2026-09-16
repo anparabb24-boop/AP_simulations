@@ -16,6 +16,7 @@
           <button id="navEField" class="nav-btn">Delayed E-Field</button>
           <button id="navPlanet" class="nav-btn">Planetary Bodies</button>
           <button id="navPlanet3D" class="nav-btn">3D Planet</button>
+          <button id="navLorenz" class="nav-btn">Lorenz Attractor</button>
         </nav>
       </div>
       <h1 id="simTitle">Double Pendulum</h1>
@@ -152,6 +153,68 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/FontUtils.js"></script>
 
+    <!-- Lorenz Attractor View -->
+    <div id="viewLorenz" class="sim-view" style="display: none;">
+      <section class="simulation-card">
+        <div class="canvas-wrap canvas-wrap-lorenz">
+          <div id="lorenzCanvas" aria-label="Animated 3D Lorenz attractor"></div>
+        </div>
+        <div class="controls">
+          <button id="lorenzPlayButton" class="button primary">▶ Play</button>
+          <button id="lorenzPauseButton" class="button">⏸ Pause</button>
+          <button id="lorenzResetButton" class="button">↻ Reset</button>
+          <label class="speed-control" for="lorenzSpeed">
+            <span>Speed</span>
+            <select id="lorenzSpeed">
+              <option value="1">1x</option>
+              <option value="0.75">0.75x</option>
+              <option value="0.5">0.5x</option>
+              <option value="0.25">0.25x</option>
+            </select>
+          </label>
+          <div class="time">
+            <span>Progress</span>
+            <strong id="lorenzTimeDisplay">t = 0.0s</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <h2>Lorenz system parameters</h2>
+        <div class="parameters">
+          <div class="parameter">
+            <label for="lorenzSigma">Sigma (σ)</label>
+            <div class="parameter-control">
+              <input type="range" id="lorenzSigmaSlider" value="10" step="0.1" min="0.1" max="30" />
+              <input type="number" id="lorenzSigma" value="10" step="0.1" min="0.1" max="30" />
+            </div>
+          </div>
+          <div class="parameter">
+            <label for="lorenzRho">Rho (ρ)</label>
+            <div class="parameter-control">
+              <input type="range" id="lorenzRhoSlider" value="28" step="0.1" min="0.1" max="60" />
+              <input type="number" id="lorenzRho" value="28" step="0.1" min="0.1" max="60" />
+            </div>
+          </div>
+          <div class="parameter">
+            <label for="lorenzBeta">Beta (β)</label>
+            <div class="parameter-control">
+              <input type="range" id="lorenzBetaSlider" value="2.6667" step="0.01" min="0.1" max="10" />
+              <input type="number" id="lorenzBeta" value="2.6667" step="0.01" min="0.1" max="10" />
+            </div>
+          </div>
+          <div class="parameter">
+            <label for="lorenzEndTime">Duration (s)</label>
+            <input type="number" id="lorenzEndTime" value="40" step="5" min="1" />
+          </div>
+          <div class="parameter">
+            <label for="lorenzSamplingInterval">Sampling interval dt (s)</label>
+            <input type="number" id="lorenzSamplingInterval" value="0.01" step="0.001" min="0.001" max="0.05" />
+          </div>
+        </div>
+      </section>
+    </div>
+
     <!-- 3D Planet View -->
     <div id="viewPlanet3D" class="sim-view" style="display: none;">
       <div class="planet3D-layout">
@@ -282,6 +345,7 @@
   <script src="electric_field.js"></script>
   <script src="planet_simulation.js"></script>
   <script src="planet3d.js"></script>
+  <script src="lorenz_attractor.js"></script>
   <script src="app_router.js"></script>
 </body>
 </html>
