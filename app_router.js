@@ -13,7 +13,17 @@ const viewLorenz = document.getElementById('viewLorenz');
 const simTitle = document.getElementById('simTitle');
 const simSubtitle = document.getElementById('simSubtitle');
 
+function trackSimulationSelection(simulation) {
+  if (typeof gtag === 'function') {
+    gtag('event', 'select_content', {
+      content_type: 'simulation',
+      item_id: simulation
+    });
+  }
+}
+
 navPendulum.addEventListener('click', () => {
+  trackSimulationSelection('double_pendulum');
   navPendulum.classList.add('active');
   navEField.classList.remove('active');
   navPlanet.classList.remove('active');
@@ -33,6 +43,7 @@ navPendulum.addEventListener('click', () => {
 });
 
 navEField.addEventListener('click', () => {
+  trackSimulationSelection('delayed_e_field');
   navEField.classList.add('active');
   navPendulum.classList.remove('active');
   navPlanet.classList.remove('active');
@@ -52,6 +63,7 @@ navEField.addEventListener('click', () => {
 });
 
 navPlanet.addEventListener('click', () => {
+  trackSimulationSelection('planetary_bodies');
   navPlanet.classList.add('active');
   navPendulum.classList.remove('active');
   navEField.classList.remove('active');
@@ -71,6 +83,7 @@ navPlanet.addEventListener('click', () => {
 });
 
 navPlanet3D.addEventListener('click', () => {
+  trackSimulationSelection('planet_3d');
   navPlanet3D.classList.add('active');
   navPendulum.classList.remove('active');
   navEField.classList.remove('active');
@@ -90,6 +103,7 @@ navPlanet3D.addEventListener('click', () => {
 });
 
 navLorenz.addEventListener('click', () => {
+  trackSimulationSelection('lorenz_attractor');
   navLorenz.classList.add('active');
   navPendulum.classList.remove('active');
   navEField.classList.remove('active');
