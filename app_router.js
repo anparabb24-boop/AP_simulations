@@ -12,6 +12,34 @@ const viewLorenz = document.getElementById('viewLorenz');
 
 const simTitle = document.getElementById('simTitle');
 const simSubtitle = document.getElementById('simSubtitle');
+const simMenuToggle = document.getElementById('simMenuToggle');
+const simMenuLabel = document.getElementById('simMenuLabel');
+const simHeader = document.querySelector('.header');
+
+function setSimulationMenuOpen(isOpen) {
+  simHeader?.classList.toggle('menu-open', isOpen);
+  document.body.classList.toggle('menu-open', isOpen);
+  simMenuToggle?.setAttribute('aria-expanded', String(isOpen));
+  if (!isOpen && simMenuLabel) {
+    simMenuLabel.textContent = document.querySelector('.nav-btn.active')?.textContent.trim() || 'Simulations';
+  }
+}
+
+simMenuToggle?.addEventListener('click', () => {
+  setSimulationMenuOpen(simMenuToggle.getAttribute('aria-expanded') !== 'true');
+});
+
+document.getElementById('simNav')?.addEventListener('click', (event) => {
+  if (event.target.closest('.nav-btn')) setSimulationMenuOpen(false);
+});
+
+simHeader?.addEventListener('click', (event) => {
+  if (event.target === simHeader && simHeader.classList.contains('menu-open')) setSimulationMenuOpen(false);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && simHeader?.classList.contains('menu-open')) setSimulationMenuOpen(false);
+});
 
 function trackSimulationSelection(simulation) {
   if (typeof gtag === 'function') {

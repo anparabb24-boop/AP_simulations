@@ -203,6 +203,7 @@ h1 {
 
 #planet3DCanvas {
   background: #05080d;
+  touch-action: none;
 }
 
 #simulationCanvas,
@@ -450,6 +451,23 @@ h1 {
   }
 }
 
+@media (max-width: 700px) {
+  .app {
+    width: calc(100% - 20px);
+    padding: 16px 0 max(24px, env(safe-area-inset-bottom));
+  }
+
+  .planet3D-layout .canvas-wrap {
+    height: min(58svh, 520px);
+    min-height: 280px;
+    aspect-ratio: auto;
+  }
+
+  .planet3D-layout #planet3DObjectDetails .parameters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .header-top {
   display: flex;
   justify-content: space-between;
@@ -465,6 +483,8 @@ h1 {
   border-radius: 10px;
   border: 1px solid #2a3441;
 }
+
+.sim-menu-toggle { display: none; }
 
 .nav-btn {
   background: transparent;
@@ -485,4 +505,76 @@ h1 {
 .nav-btn.active {
   background: #0066ff;
   color: #ffffff;
+}
+
+@media (max-width: 700px) {
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-top .eyebrow {
+    margin: 0;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+  }
+
+  .sim-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid #2a3441;
+    border-radius: 10px;
+    background: #1c2533;
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .menu-icon { font-size: 1.1rem; }
+  .sim-nav { display: none; }
+
+  .header.menu-open::after {
+    content: "";
+    position: fixed;
+    z-index: 30;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  .header.menu-open .sim-nav {
+    position: fixed;
+    z-index: 31;
+    inset: 0 auto 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: min(82vw, 320px);
+    height: 100vh;
+    height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border: 0;
+    border-right: 1px solid #2a3441;
+    border-radius: 0 16px 16px 0;
+    background: #131b27;
+    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.4);
+  }
+
+  .header.menu-open .nav-btn {
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  body.menu-open { overflow: hidden; }
 }

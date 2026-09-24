@@ -19,7 +19,11 @@
     <header class="header">
       <div class="header-top">
         <p class="eyebrow">PHYSICS SIMULATION WORKSPACE</p>
-        <nav class="sim-nav">
+        <button id="simMenuToggle" class="sim-menu-toggle" type="button" aria-expanded="false" aria-controls="simNav">
+          <span class="menu-icon" aria-hidden="true">☰</span>
+          <span id="simMenuLabel">Double Pendulum</span>
+        </button>
+        <nav id="simNav" class="sim-nav" aria-label="Simulations">
           <button id="navPendulum" class="nav-btn active">Double Pendulum</button>
           <button id="navEField" class="nav-btn">Delayed E-Field</button>
           <button id="navPlanet" class="nav-btn">Planetary Bodies</button>

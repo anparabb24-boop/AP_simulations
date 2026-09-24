@@ -182,6 +182,20 @@ function planet3DSelectAtPointer(event) {
   planet3DRenderer.render(planet3DScene, planet3DCamera);
 }
 
+let planet3DPointerStart = null;
+function planet3DHandlePointerDown(event) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  planet3DPointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+}
+
+function planet3DHandlePointerUp(event) {
+  if (!planet3DPointerStart || planet3DPointerStart.id !== event.pointerId) return;
+  const moved = Math.hypot(event.clientX - planet3DPointerStart.x, event.clientY - planet3DPointerStart.y);
+  planet3DPointerStart = null;
+  // OrbitControls handles drags; treat a stationary touch/mouse press as a selection.
+  if (moved <= 10) planet3DSelectAtPointer(event);
+}
+
 function planet3DMakeSphereMaterial(color) {
   return new THREE.MeshLambertMaterial({
     color,
@@ -582,6 +596,7 @@ function planet3DResize() {
 
   const width = parent.clientWidth;
   const height = parent.clientHeight;
+  if (!width || !height) return;
   planet3DRenderer.setSize(width, height, false);
   planet3DCamera.aspect = width / height;
   planet3DCamera.updateProjectionMatrix();
@@ -690,7 +705,9 @@ planet3DTrajectoryToggle?.addEventListener('change', () => {
   planet3DUpdateTrajectory();
   planet3DRenderer?.render(planet3DScene, planet3DCamera);
 });
-planet3DCanvas?.addEventListener('click', planet3DSelectAtPointer);
+planet3DCanvas?.addEventListener('pointerdown', planet3DHandlePointerDown);
+planet3DCanvas?.addEventListener('pointerup', planet3DHandlePointerUp);
+planet3DCanvas?.addEventListener('pointercancel', () => { planet3DPointerStart = null; });
 window.addEventListener('resize', planet3DResize);
 
 if (planet3DCanvas) {
