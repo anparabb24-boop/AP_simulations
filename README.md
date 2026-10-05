@@ -44,10 +44,6 @@ The CSV export records the initial scene and every animation update. Its columns
 
 A Three.js visualization of the electric field from a moving point charge, including propagation delay (retarded potentials). Enter the charge trajectory as JavaScript expressions for `x(t)`, `y(t)`, and `z(t)`, choose the charge magnitude and grid plane, then animate the result.
 
-### CNN Image Classification
-
-Displays the supplied starch sample image and its CNN result: Starch at 100% confidence, with Pure and Urea at 0%. A different image can be selected for preview, but model inference is not connected to the website; selecting a new image hides the sample prediction.
-
 ## Run locally
 
 Open `index.html` in a modern browser, or serve the directory locally:
@@ -65,8 +61,6 @@ Then visit [http://localhost:8000](http://localhost:8000). Use the navigation bu
 | `index.html` | Application layout, navigation, controls, and script loading |
 | `style.css` | Shared application and simulation styling |
 | `app_router.js` | Navigation between simulation views |
-| `cnn_results.js` | CNN sample image preview and supplied-result display |
-| `starch-sample.svg` | Sample image shown on the CNN results page |
 | `double_pendulum.js` | Double-pendulum physics, rendering, and CSV export |
 | `planet_simulation.js` | 2D many-body gravity simulation and CSV export |
 | `lorenz_attractor.js` | Lorenz attractor solver, renderer, and CSV export |
