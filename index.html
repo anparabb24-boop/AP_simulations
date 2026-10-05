@@ -29,6 +29,7 @@
           <button id="navPlanet" class="nav-btn">Planetary Bodies</button>
           <button id="navPlanet3D" class="nav-btn">3D Planet</button>
           <button id="navLorenz" class="nav-btn">Lorenz Attractor</button>
+          <button id="navCNN" class="nav-btn">CNN Results</button>
         </nav>
       </div>
       <h1 id="simTitle">Double Pendulum</h1>
@@ -41,8 +42,17 @@
     <div id="viewPendulum" class="sim-view">
       <section class="simulation-card">
         <div class="canvas-wrap">
-          <canvas id="simulationCanvas"></canvas>
+          <canvas id="simulationCanvas" tabindex="0" role="application" aria-label="Pendulum. Click a mass or use the arrow keys to select one, then press Enter to edit its initial velocity."></canvas>
         </div>
+        <section id="massVelocityPanel" class="mass-velocity-panel" aria-labelledby="massVelocityTitle" aria-live="polite" hidden>
+          <div class="mass-velocity-heading">
+            <h2 id="massVelocityTitle">Mass velocity</h2>
+            <button id="closeMassVelocityPanel" class="mass-velocity-close" type="button" aria-label="Close velocity editor">×</button>
+          </div>
+          <label for="initialTangentialVelocity">Initial tangential velocity along link (m/s)</label>
+          <input type="number" id="initialTangentialVelocity" value="0" step="0.1" />
+          <p class="mass-velocity-vector">Initial velocity: <output id="massVelocityVector">vx = 0.000, vy = 0.000 m/s</output></p>
+        </section>
         <div class="controls">
           <button id="playButton" class="button primary">▶ Play</button>
           <button id="pauseButton" class="button">⏸ Pause</button>
@@ -59,29 +69,10 @@
         <h2>Simulation parameters</h2>
         <div class="parameters">
           <div class="parameter">
-            <label for="inputL1">Rod 1 length (m)</label>
-            <input type="number" id="inputL1" value="1.0" step="0.1" min="0.1" />
+            <label for="inputLinkCount">No. of links</label>
+            <input type="number" id="inputLinkCount" value="2" step="1" min="1" max="20" />
           </div>
-          <div class="parameter">
-            <label for="inputL2">Rod 2 length (m)</label>
-            <input type="number" id="inputL2" value="1.0" step="0.1" min="0.1" />
-          </div>
-          <div class="parameter">
-            <label for="inputTh1">Angle 1 (°)</label>
-            <input type="number" id="inputTh1" value="90" step="1" />
-          </div>
-          <div class="parameter">
-            <label for="inputTh2">Angle 2 (°)</label>
-            <input type="number" id="inputTh2" value="90" step="1" />
-          </div>
-          <div class="parameter">
-            <label for="inputM1">Mass 1 (kg)</label>
-            <input type="number" id="inputM1" value="5.0" step="0.5" min="0.1" />
-          </div>
-          <div class="parameter">
-            <label for="inputM2">Mass 2 (kg)</label>
-            <input type="number" id="inputM2" value="5.0" step="0.5" min="0.1" />
-          </div>
+          <div id="linkParameters" class="link-parameters"></div>
           <div class="parameter">
             <label for="inputTStop">Max Sim Time (s)</label>
             <input type="number" id="inputTStop" value="10" step="1" min="1" />
@@ -356,16 +347,75 @@
           </select>
         </div>
       </div>
-    </section>
-  </div>
-</div>
-</section>
+      </section>
+      </div>
+      </div>
+      </section>
+
+          <!-- CNN Results View -->
+          <div id="viewCNN" class="sim-view" style="display: none;">
+            <section class="cnn-layout">
+              <article class="simulation-card cnn-image-panel">
+                <div class="cnn-panel-heading">
+                  <div>
+                    <p class="cnn-kicker">INPUT IMAGE</p>
+                    <h2>Starch sample</h2>
+                  </div>
+                  <span id="cnnImageState" class="cnn-state">Sample</span>
+                </div>
+                <figure class="cnn-image-frame">
+                  <img id="cnnPreview" src="starch-sample.svg" alt="Microscope image of a starch sample with dark and pale circular regions" />
+                </figure>
+                <div class="cnn-image-actions">
+                  <label class="button primary" for="cnnImageInput">Choose image</label>
+                  <input id="cnnImageInput" class="cnn-file-input" type="file" accept="image/*" />
+                  <button id="cnnRestoreSample" class="button" type="button">Restore sample</button>
+                  <p id="cnnImageMessage" class="cnn-image-message" role="status">Showing the sample image from the supplied CNN run.</p>
+                </div>
+              </article>
+
+              <article class="simulation-card cnn-result-panel" aria-live="polite">
+                <div class="cnn-panel-heading">
+                  <div>
+                    <p class="cnn-kicker">MODEL OUTPUT</p>
+                    <h2>Classification</h2>
+                  </div>
+                  <span class="cnn-state cnn-state-complete">Prediction available</span>
+                </div>
+                <div id="cnnPredictionDetails">
+                  <div class="cnn-prediction">
+                    <span class="cnn-prediction-label">Predicted class</span>
+                    <strong>Starch</strong>
+                    <div class="cnn-confidence"><span>Confidence</span><b>100.00%</b></div>
+                  </div>
+                  <div class="cnn-probabilities">
+                    <h3>Class probabilities</h3>
+                    <div class="cnn-probability-row">
+                      <div class="cnn-probability-heading"><span>Pure</span><b>0.00%</b></div>
+                      <div class="cnn-meter"><span style="width: 0%"></span></div>
+                    </div>
+                    <div class="cnn-probability-row is-predicted">
+                      <div class="cnn-probability-heading"><span>Starch</span><b>100.00%</b></div>
+                      <div class="cnn-meter"><span style="width: 100%"></span></div>
+                    </div>
+                    <div class="cnn-probability-row">
+                      <div class="cnn-probability-heading"><span>Urea</span><b>0.00%</b></div>
+                      <div class="cnn-meter"><span style="width: 0%"></span></div>
+                    </div>
+                  </div>
+                  <p class="cnn-result-footnote">Values shown are from the supplied CNN result. Model inference is not connected to this page.</p>
+                </div>
+                <p id="cnnUnclassifiedNotice" class="cnn-unclassified" hidden>The image changed. The displayed result belongs to the original sample; inference has not been run for this image.</p>
+              </article>
+            </section>
+          </div>
 
   <script src="double_pendulum.js"></script>
   <script src="electric_field.js"></script>
   <script src="planet_simulation.js"></script>
   <script src="planet3d.js"></script>
   <script src="lorenz_attractor.js"></script>
+  <script src="cnn_results.js"></script>
   <script src="app_router.js"></script>
 </body>
 </html>

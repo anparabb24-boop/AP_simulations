@@ -6,11 +6,11 @@ An interactive, browser-based collection of AP Physics-inspired simulations. The
 
 ### Double Pendulum
 
-A 2D chaotic double-pendulum model with adjustable rod lengths, initial angles, bob masses, and maximum duration. It draws the second bob's trail and uses a fixed `0.01 s` physics timestep.
+A 2D pendulum chain with 1–20 links. Each link has an adjustable length, initial angle, and bob mass; the simulation also has a configurable maximum duration and CSV sample rate. It draws the final link's trail and uses fourth-order Runge–Kutta integration with a fixed `0.01 s` physics timestep.
 
-The CSV export includes the initial state and sampled simulation data:
+The CSV export includes the initial state and sampled simulation data, with position and angle columns for each configured link. For a two-link pendulum, the columns are:
 
-`time_s, x1_m, y1_m, x2_m, y2_m, theta1_rad, theta2_rad`
+`time_s, link_1_x_m, link_1_y_m, link_1_angle_rad, link_2_x_m, link_2_y_m, link_2_angle_rad`
 
 The CSV sample rate is user-configurable in Hz, up to the 100 Hz physics-update limit.
 
@@ -44,6 +44,10 @@ The CSV export records the initial scene and every animation update. Its columns
 
 A Three.js visualization of the electric field from a moving point charge, including propagation delay (retarded potentials). Enter the charge trajectory as JavaScript expressions for `x(t)`, `y(t)`, and `z(t)`, choose the charge magnitude and grid plane, then animate the result.
 
+### CNN Image Classification
+
+Displays the supplied starch sample image and its CNN result: Starch at 100% confidence, with Pure and Urea at 0%. A different image can be selected for preview, but model inference is not connected to the website; selecting a new image hides the sample prediction.
+
 ## Run locally
 
 Open `index.html` in a modern browser, or serve the directory locally:
@@ -61,6 +65,8 @@ Then visit [http://localhost:8000](http://localhost:8000). Use the navigation bu
 | `index.html` | Application layout, navigation, controls, and script loading |
 | `style.css` | Shared application and simulation styling |
 | `app_router.js` | Navigation between simulation views |
+| `cnn_results.js` | CNN sample image preview and supplied-result display |
+| `starch-sample.svg` | Sample image shown on the CNN results page |
 | `double_pendulum.js` | Double-pendulum physics, rendering, and CSV export |
 | `planet_simulation.js` | 2D many-body gravity simulation and CSV export |
 | `lorenz_attractor.js` | Lorenz attractor solver, renderer, and CSV export |

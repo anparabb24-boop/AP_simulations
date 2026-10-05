@@ -185,6 +185,76 @@ h1 {
   background: #131b27;
 }
 
+.mass-velocity-panel {
+  margin: 12px 18px 0;
+  padding: 14px;
+  border: 1px solid #66e3d3;
+  border-radius: 8px;
+  background: #1c2533;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mass-velocity-panel[hidden] {
+  display: none;
+}
+
+.mass-velocity-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mass-velocity-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mass-velocity-close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #3a4a5a;
+  border-radius: 6px;
+  background: #131b27;
+  color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.mass-velocity-panel > label {
+  display: block;
+  margin-bottom: 6px;
+  color: #b9c4d0;
+  font-size: 0.82rem;
+}
+
+.mass-velocity-panel input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #3a4a5a;
+  border-radius: 6px;
+  background: #131b27;
+  color: #ffffff;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.mass-velocity-vector {
+  margin: 10px 0 0;
+  color: #b9c4d0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+#simulationCanvas {
+  touch-action: manipulation;
+}
+
 .canvas-wrap-3d {
   min-height: 540px;
 }
@@ -348,6 +418,51 @@ h1 {
   gap: 12px;
 }
 
+.link-parameters {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.link-parameter {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+  background: #1c2533;
+}
+
+.link-parameter h3 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.link-parameter-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.link-parameter-fields label {
+  min-width: 0;
+  color: #9ba3af;
+  font-size: 0.75rem;
+}
+
+.link-parameter-fields input {
+  width: 100%;
+  min-width: 0;
+  margin-top: 5px;
+  padding: 6px 7px;
+  border: 1px solid #2a3441;
+  border-radius: 6px;
+  background: #131b27;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
 .parameter-control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 82px;
@@ -388,6 +503,220 @@ h1 {
 
 .parameter input:focus {
   border-color: #0066ff;
+}
+
+.cnn-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.cnn-image-panel,
+.cnn-result-panel {
+  min-width: 0;
+  padding: 22px;
+}
+
+.cnn-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cnn-panel-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.cnn-kicker {
+  margin: 0 0 6px;
+  color: #8e9aa9;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.cnn-state {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid #3d4857;
+  border-radius: 6px;
+  color: #b8c2cc;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.cnn-state-complete {
+  border-color: #326c61;
+  color: #9be0ce;
+}
+
+.cnn-image-frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 280px;
+  margin: 0;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+  background: #f5f5ed;
+}
+
+.cnn-image-frame img {
+  display: block;
+  width: 100%;
+  max-height: min(58vh, 560px);
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.cnn-image-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+}
+
+.cnn-image-actions .button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.cnn-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.cnn-file-input:focus-visible + .button {
+  outline: 2px solid #66e3d3;
+  outline-offset: 3px;
+}
+
+.cnn-image-message {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  color: #9ba3af;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.cnn-prediction {
+  padding: 18px;
+  border: 1px solid #2d3a47;
+  border-radius: 8px;
+  background: #192432;
+}
+
+.cnn-prediction-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #a6b2bf;
+  font-size: 0.78rem;
+}
+
+.cnn-prediction > strong {
+  display: block;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.cnn-confidence,
+.cnn-probability-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cnn-confidence {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #2d3a47;
+  color: #a6b2bf;
+  font-size: 0.82rem;
+}
+
+.cnn-confidence b,
+.cnn-probability-heading b {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.cnn-probabilities {
+  margin-top: 24px;
+}
+
+.cnn-probabilities h3 {
+  margin: 0 0 16px;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.cnn-probability-row {
+  margin-top: 14px;
+  color: #c2cbd4;
+  font-size: 0.83rem;
+}
+
+.cnn-probability-row.is-predicted {
+  color: #9be0ce;
+}
+
+.cnn-meter {
+  height: 7px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #303b48;
+}
+
+.cnn-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #66d1b5;
+}
+
+.cnn-result-footnote {
+  margin: 22px 0 0;
+  color: #8895a3;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.cnn-unclassified {
+  margin: 0;
+  padding: 16px;
+  border-left: 3px solid #d9a85c;
+  background: #242b31;
+  color: #e4d4b8;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .cnn-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cnn-image-frame {
+    min-height: 220px;
+  }
 }
 
 @media (max-width: 700px) {
@@ -448,6 +777,14 @@ h1 {
 @media (max-width: 430px) {
   .parameters {
     grid-template-columns: 1fr;
+  }
+
+  .link-parameters {
+    grid-template-columns: 1fr;
+  }
+
+  .link-parameter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

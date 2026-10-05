@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title">
+  <title id="title">Starch sample image</title>
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.12" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="600" height="600" fill="#fbfbf2" />
+  <circle cx="302" cy="300" r="84" fill="#f0f0e8" />
+  <circle cx="150" cy="335" r="68" fill="#071b31" />
+  <rect width="600" height="600" filter="url(#grain)" opacity="0.36" />
+</svg>
