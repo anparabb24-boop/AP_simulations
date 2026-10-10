@@ -19,10 +19,10 @@ const planet3DObjectVz = document.getElementById('planet3DObjectVz');
 const planet3DSaveObjectButton = document.getElementById('planet3DSaveObjectButton');
 const planet3DTrajectoryToggle = document.getElementById('planet3DTrajectoryToggle');
 
-const PLANET3D_GRID_HALF_EXTENT = 6.0;
+const PLANET3D_GRID_HALF_EXTENT = 10.0;
 const PLANET3D_GRID_SPACING = 0.15;
-const PLANET3D_CURVATURE_STRENGTH = 0.1;
-const PLANET3D_CURVATURE_SOFTENING = 0.5;
+const PLANET3D_CURVATURE_STRENGTH = 0.075;
+const PLANET3D_CURVATURE_SOFTENING = 0.75;
 const PLANET3D_BASE_RADIUS = 100.0;
 let planet3DGravityScale = 1.0;
 let planet3DMaxTime = 100.0;
