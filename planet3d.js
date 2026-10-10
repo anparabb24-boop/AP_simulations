@@ -126,6 +126,14 @@ function planet3DUpdateTrajectory() {
   planet3DScene.add(planet3DTrajectoryLine);
 }
 
+function planet3DCloneBodyState(body) {
+  return {
+    ...body,
+    position: { ...body.position },
+    velocity: { ...body.velocity },
+  };
+}
+
 function planet3DReadObjectDetail(input, property, minimum = -Infinity) {
   if (planet3DSelectedIndex === null) return;
   const value = Number.parseFloat(input.value);
@@ -143,6 +151,10 @@ function planet3DReadObjectDetail(input, property, minimum = -Infinity) {
     planet3DRefreshGrid();
   } else {
     body.velocity[property] = value;
+  }
+
+  if (!planet3DRunning && planet3DTime === 0) {
+    planet3DBaseBodyStructures[planet3DSelectedIndex] = planet3DCloneBodyState(body);
   }
 
   planet3DUpdateObjectDetails();
@@ -570,6 +582,7 @@ function planet3DInitScene() {
   planet3DScene.add(planet3DGroup);
 
   planet3DPhysicsBodies = planet3DCreateBodyState();
+  planet3DBaseBodyStructures = planet3DPhysicsBodies.map(planet3DCloneBodyState);
   planet3DTimeSeries = [];
   planet3DRecordTimeSeriesPoint();
 
@@ -611,7 +624,10 @@ function planet3DReset() {
   planet3DRemoveTrajectory();
   if (planet3DAnimationFrame) cancelAnimationFrame(planet3DAnimationFrame);
   planet3DAnimationFrame = null;
-  planet3DPhysicsBodies = planet3DCreateBodyState();
+  if (planet3DBaseBodyStructures.length !== planet3DMassCount) {
+    planet3DBaseBodyStructures = planet3DCreateBodyState().map(planet3DCloneBodyState);
+  }
+  planet3DPhysicsBodies = planet3DBaseBodyStructures.map(planet3DCloneBodyState);
   planet3DTimeSeries = [];
   planet3DRecordTimeSeriesPoint();
 
